@@ -164,13 +164,136 @@ export default function HomePage() {
 }
 
 function StudentHomePage() {
-  // This is a stub component that will render when a student is logged in
-  // For now, we'll redirect to my-courses, but we could render a student dashboard here
-  return <Link href="/my-courses" replace><></></Link>;
+  const { data: stats } = useQuery({
+    queryKey: ["/api/student/stats"],
+  });
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-3xl font-bold mb-8">Панель студента</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Мои курсы</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats?.enrolledCourses || 0}</div>
+            <p className="text-sm text-muted-foreground">Активных курсов</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Прогресс</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {stats?.completedAssignments || 0}/{stats?.totalAssignments || 0}
+            </div>
+            <p className="text-sm text-muted-foreground">Выполнено заданий</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Средний балл</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {stats?.courseData?.reduce((acc, course) => acc + (course.grade || 0), 0) / (stats?.courseData?.length || 1)}%
+            </div>
+            <p className="text-sm text-muted-foreground">По всем курсам</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Последние курсы</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats?.courseData?.slice(0, 3).map((enrollment) => (
+              <Link 
+                key={enrollment.courseId} 
+                href={`/courses/${enrollment.courseId}`}
+                className="block p-4 hover:bg-muted rounded-lg mb-2 last:mb-0"
+              >
+                <div className="font-medium">{enrollment.course.title}</div>
+                <div className="text-sm text-muted-foreground">
+                  Прогресс: {enrollment.progress}%
+                </div>
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
 }
 
 function TeacherHomePage() {
-  // This is a stub component that will render when a teacher is logged in
-  // For now, we'll redirect to the teacher dashboard
-  return <Link href="/teacher" replace><></></Link>;
+  const { data: stats } = useQuery({
+    queryKey: ["/api/teacher/stats"],
+  });
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-3xl font-bold mb-8">Панель преподавателя</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Мои курсы</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats?.totalCourses || 0}</div>
+            <p className="text-sm text-muted-foreground">Активных курсов</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Студенты</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats?.totalStudents || 0}</div>
+            <p className="text-sm text-muted-foreground">Всего студентов</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Проверка</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats?.pendingSubmissions || 0}</div>
+            <p className="text-sm text-muted-foreground">Работ на проверке</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Активные курсы</CardTitle>
+            <Link href="/teacher">
+              <Button variant="ghost">Все курсы</Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {stats?.courses?.slice(0, 3).map((course) => (
+              <div key={course.id} className="p-4 hover:bg-muted rounded-lg mb-2 last:mb-0">
+                <div className="font-medium">{course.title}</div>
+                <div className="text-sm text-muted-foreground">
+                  {course.studentCount} студентов
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
 }

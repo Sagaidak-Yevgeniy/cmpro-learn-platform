@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { CourseFeedback as CourseFeedbackType, insertCourseFeedbackSchema } from "@shared/schema";
@@ -13,12 +14,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { format } from "date-fns";
-import { Star, StarIcon, MessageSquare, MessageSquarePlus } from "lucide-react";
+import { Star, StarIcon, MessageSquare, MessageSquarePlus, Edit2, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-// Расширяем схему с дополнительной валидацией
 const feedbackFormSchema = insertCourseFeedbackSchema.extend({
-  content: z.string().min(10, "Отзыв должен содержать минимум 10 символов").max(500, "Отзыв не должен превышать 500 символов"),
-  rating: z.number().min(1, "Оценка должна быть минимум 1").max(5, "Оценка не должна превышать 5")
+  content: z.string()
+    .min(10, "Отзыв должен содержать минимум 10 символов")
+    .max(500, "Отзыв не должен превышать 500 символов"),
+  rating: z.number()
+    .min(1, "Оценка должна быть минимум 1")
+    .max(5, "Оценка не должна превышать 5")
 });
 
 type FeedbackFormValues = z.infer<typeof feedbackFormSchema>;
@@ -33,19 +38,16 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Получение отзывов к курсу
   const { data: feedbacks, isLoading: feedbacksLoading } = useQuery<CourseFeedbackType[]>({
     queryKey: [`/api/courses/${courseId}/feedbacks`],
     enabled: !!courseId,
   });
 
-  // Получение отзыва пользователя к курсу (если есть)
   const { data: userFeedback } = useQuery<CourseFeedbackType>({
     queryKey: [`/api/courses/${courseId}/feedbacks/my`],
     enabled: !!user && !!courseId && isEnrolled,
   });
 
-  // Настройка формы с react-hook-form и zod
   const form = useForm<FeedbackFormValues>({
     resolver: zodResolver(feedbackFormSchema),
     defaultValues: {
@@ -55,15 +57,12 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
     },
   });
 
-  // Мутация для добавления/обновления отзыва
   const feedbackMutation = useMutation({
     mutationFn: async (values: FeedbackFormValues) => {
       if (userFeedback) {
-        // Обновление существующего отзыва
         const res = await apiRequest("PATCH", `/api/feedbacks/${userFeedback.id}`, values);
         return await res.json();
       } else {
-        // Создание нового отзыва
         const res = await apiRequest("POST", "/api/feedbacks", values);
         return await res.json();
       }
@@ -86,7 +85,29 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
     },
   });
 
-  // Обработчик отправки формы
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (userFeedback) {
+        await apiRequest("DELETE", `/api/feedbacks/${userFeedback.id}`);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}/feedbacks`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}/feedbacks/my`] });
+      toast({
+        title: "Отзыв удален",
+        description: "Ваш отзыв был успешно удален",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Ошибка",
+        description: `Не удалось удалить отзыв: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (values: FeedbackFormValues) => {
     feedbackMutation.mutate(values);
   };
@@ -100,23 +121,35 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
     );
   }
 
-  // Функция для отображения звезд рейтинга
-  const RatingStars = ({ rating }: { rating: number | null }) => {
+  const RatingStars = ({ rating, interactive = false, onChange }: { 
+    rating: number | null, 
+    interactive?: boolean,
+    onChange?: (rating: number) => void 
+  }) => {
     if (rating === null) return null;
     
     return (
       <div className="flex items-center">
         {[...Array(5)].map((_, i) => (
-          <Star
+          <Button
             key={i}
-            className={`h-4 w-4 ${i < rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
-          />
+            type="button"
+            variant="ghost"
+            className={`p-0 h-8 w-8 ${!interactive && 'cursor-default'}`}
+            onClick={() => interactive && onChange?.(i + 1)}
+            disabled={!interactive}
+          >
+            <Star
+              className={`h-6 w-6 ${
+                i < rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
+              }`}
+            />
+          </Button>
         ))}
       </div>
     );
   };
-  
-  // Компонент диалогового окна для добавления/редактирования отзыва
+
   const FeedbackDialog = () => (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
@@ -131,7 +164,7 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
         >
           {userFeedback ? (
             <>
-              <MessageSquare className="h-4 w-4" />
+              <Edit2 className="h-4 w-4" />
               Редактировать отзыв
             </>
           ) : (
@@ -154,23 +187,11 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Оценка</FormLabel>
-                  <div className="flex space-x-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Button
-                        key={star}
-                        type="button"
-                        variant="ghost"
-                        className="p-0 h-8 w-8"
-                        onClick={() => field.onChange(star)}
-                      >
-                        <Star 
-                          className={`h-6 w-6 ${
-                            field.value >= star ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
-                          }`}
-                        />
-                      </Button>
-                    ))}
-                  </div>
+                  <RatingStars 
+                    rating={field.value} 
+                    interactive={true}
+                    onChange={(rating) => field.onChange(rating)}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -223,6 +244,33 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
     </Dialog>
   );
 
+  const DeleteFeedbackDialog = () => (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" size="icon" className="text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Удалить отзыв?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Это действие нельзя будет отменить. Ваш отзыв будет удален навсегда.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Отмена</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => deleteMutation.mutate()}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Удалить
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -232,7 +280,10 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
         </h3>
         
         {isEnrolled && user && (
-          <FeedbackDialog />
+          <div className="flex gap-2">
+            <FeedbackDialog />
+            {userFeedback && <DeleteFeedbackDialog />}
+          </div>
         )}
       </div>
 
