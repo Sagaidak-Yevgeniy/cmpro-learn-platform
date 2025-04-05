@@ -45,7 +45,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const courseData = insertCourseSchema.parse(req.body);
+      // Расширяем схему, чтобы преобразовать строковые даты в объекты Date
+      const courseSchemaWithDateConversion = insertCourseSchema.transform((data) => ({
+        ...data,
+        startDate: data.startDate instanceof Date ? data.startDate : new Date(data.startDate),
+        endDate: data.endDate instanceof Date ? data.endDate : new Date(data.endDate)
+      }));
+      
+      const courseData = courseSchemaWithDateConversion.parse(req.body);
       
       // Добавляем teacherId из аутентифицированного пользователя
       const course = await storage.createCourse({
@@ -58,6 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Неверные данные курса", errors: error.errors });
       }
+      console.error("Ошибка при создании курса:", error);
       res.status(500).json({ message: "Ошибка при создании курса" });
     }
   });
@@ -352,7 +360,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const assignmentData = insertAssignmentSchema.parse(req.body);
+      // Расширяем схему для преобразования строковой даты в объект Date
+      const assignmentSchemaWithDateConversion = insertAssignmentSchema.transform((data) => ({
+        ...data,
+        dueDate: data.dueDate instanceof Date ? data.dueDate : new Date(data.dueDate)
+      }));
+      
+      const assignmentData = assignmentSchemaWithDateConversion.parse(req.body);
       
       // Проверка существования курса
       const course = await storage.getCourse(assignmentData.courseId);
@@ -374,6 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Неверные данные задания", errors: error.errors });
       }
+      console.error("Ошибка при создании задания:", error);
       res.status(500).json({ message: "Ошибка при создании задания" });
     }
   });
