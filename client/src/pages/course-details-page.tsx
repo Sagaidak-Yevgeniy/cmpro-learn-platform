@@ -19,27 +19,27 @@ export default function CourseDetailsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  
+
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
     queryKey: [`/api/courses/${courseId}`],
   });
-  
+
   const { data: materials, isLoading: materialsLoading } = useQuery<Material[]>({
     queryKey: [`/api/courses/${courseId}/materials`],
     enabled: !!user && !!course,
   });
-  
+
   const { data: assignments, isLoading: assignmentsLoading } = useQuery<Assignment[]>({
     queryKey: [`/api/courses/${courseId}/assignments`],
     enabled: !!user && !!course,
   });
-  
+
   const { data: enrollment, isLoading: enrollmentLoading } = useQuery<any>({
     queryKey: ["/api/enrollments/my"],
     enabled: !!user && user.role === "student",
     select: data => data?.find((e: any) => e.courseId === courseId)
   });
-  
+
   const enrollMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/enrollments", {
@@ -64,11 +64,11 @@ export default function CourseDetailsPage() {
       });
     },
   });
-  
+
   const isLoading = courseLoading || 
                    (user && (materialsLoading || assignmentsLoading || 
                    (user.role === "student" && enrollmentLoading)));
-  
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[70vh]">
@@ -76,7 +76,7 @@ export default function CourseDetailsPage() {
       </div>
     );
   }
-  
+
   if (!course) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -92,12 +92,12 @@ export default function CourseDetailsPage() {
       </div>
     );
   }
-  
+
   const isEnrolled = !!enrollment;
   const isTeacher = user?.role === "teacher";
   const isStudent = user?.role === "student";
   const isCourseOwner = isTeacher && user?.id === course.teacherId;
-  
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -143,7 +143,7 @@ export default function CourseDetailsPage() {
                 </div>
               </div>
             </div>
-            
+
             {isStudent && !isEnrolled && (
               <Button 
                 onClick={() => enrollMutation.mutate()}
@@ -156,14 +156,14 @@ export default function CourseDetailsPage() {
                 Записаться на курс
               </Button>
             )}
-            
+
             {isEnrolled && (
               <div className="flex items-center space-x-2 text-[#48BB78]">
                 <CheckCircle className="h-5 w-5" />
                 <span className="font-medium">Вы записаны на этот курс</span>
               </div>
             )}
-            
+
             {isCourseOwner && (
               <Button variant="outline" onClick={() => setLocation(`/teacher/courses/${courseId}`)}>
                 Управление курсом
@@ -184,13 +184,13 @@ export default function CourseDetailsPage() {
               </>
             )}
           </TabsList>
-          
+
           <TabsContent value="overview" className="space-y-6">
             <div>
               <h2 className="text-xl font-bold mb-3">Описание курса</h2>
               <p className="text-gray-700 whitespace-pre-line">{course.description}</p>
             </div>
-            
+
             {/* Show call to action for non-enrolled students */}
             {isStudent && !isEnrolled && (
               <div className="border-t pt-6">
@@ -214,7 +214,7 @@ export default function CourseDetailsPage() {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="materials" className="space-y-6">
             {(isEnrolled || isCourseOwner) && (
               <>
@@ -234,7 +234,13 @@ export default function CourseDetailsPage() {
                                 {material.type}
                               </span>
                             </div>
-                            <Button variant="outline" size="sm">Открыть</Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => window.open(material.url, '_blank')}
+                            >
+                              Открыть
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -248,7 +254,7 @@ export default function CourseDetailsPage() {
               </>
             )}
           </TabsContent>
-          
+
           <TabsContent value="assignments" className="space-y-6">
             {(isEnrolled || isCourseOwner) && (
               <>
@@ -287,7 +293,7 @@ export default function CourseDetailsPage() {
               </>
             )}
           </TabsContent>
-          
+
           <TabsContent value="feedback" className="space-y-6">
             <CourseFeedback courseId={courseId} isEnrolled={isEnrolled} />
           </TabsContent>

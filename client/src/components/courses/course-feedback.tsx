@@ -60,10 +60,10 @@ const CourseFeedback: React.FC<CourseReviewsProps> = ({ courseId, isEnrolled = f
   const feedbackMutation = useMutation({
     mutationFn: async (values: FeedbackFormValues) => {
       if (userFeedback) {
-        const res = await apiRequest("PATCH", `/api/feedbacks/${userFeedback.id}`, values);
+        const res = await apiRequest("PATCH", `/api/courses/${courseId}/feedbacks/${userFeedback.id}`, values);
         return await res.json();
       } else {
-        const res = await apiRequest("POST", "/api/feedbacks", values);
+        const res = await apiRequest("POST", `/api/courses/${courseId}/feedbacks`, values);
         return await res.json();
       }
     },
