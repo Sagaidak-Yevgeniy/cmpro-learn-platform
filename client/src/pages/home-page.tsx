@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import CourseList from "@/components/courses/course-list";
 import { Course } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import CourseCard from "@/components/courses/course-card";
 
 
