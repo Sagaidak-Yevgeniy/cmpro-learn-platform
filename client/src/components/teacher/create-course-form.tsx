@@ -340,7 +340,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                     {imagePreview ? (
                       <div className="relative">
                         <img 
-                          src={imagePreview?.startsWith('/') ? imagePreview : `/images/${imagePreview}`} 
+                          src={imagePreview?.startsWith('data:') ? imagePreview : `/images/${imagePreview}`} 
                           alt="Preview" 
                           className="object-cover rounded-md h-40 w-full sm:w-64"
                         />

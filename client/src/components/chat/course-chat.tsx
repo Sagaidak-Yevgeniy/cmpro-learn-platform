@@ -87,7 +87,8 @@ export default function CourseChat({ courseId }: { courseId: number }) {
   useEffect(() => {
     fetchMessages();
     
-    const ws = new WebSocket(`ws://${window.location.host}/ws/chat/${courseId}`);
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/chat/${courseId}`);
     
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
