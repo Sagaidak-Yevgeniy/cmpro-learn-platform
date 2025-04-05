@@ -161,7 +161,6 @@ export default function CourseDetailsPage() {
               <div className="flex items-center space-x-2 text-[#48BB78]">
                 <CheckCircle className="h-5 w-5" />
                 <span className="font-medium">Вы записаны на этот курс</span>
-                <CourseFeedback courseId={courseId} courseName={course.title} />
               </div>
             )}
             
@@ -177,6 +176,7 @@ export default function CourseDetailsPage() {
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="p-6">
           <TabsList className="mb-6">
             <TabsTrigger value="overview">Обзор</TabsTrigger>
+            <TabsTrigger value="feedback">Отзывы</TabsTrigger>
             {(isEnrolled || isCourseOwner) && (
               <>
                 <TabsTrigger value="materials">Материалы</TabsTrigger>
@@ -286,6 +286,10 @@ export default function CourseDetailsPage() {
                 )}
               </>
             )}
+          </TabsContent>
+          
+          <TabsContent value="feedback" className="space-y-6">
+            <CourseFeedback courseId={courseId} isEnrolled={isEnrolled} />
           </TabsContent>
         </Tabs>
       </div>

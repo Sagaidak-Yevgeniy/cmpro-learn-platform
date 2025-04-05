@@ -1,5 +1,6 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 export const users = pgTable("users", {
@@ -114,6 +115,22 @@ export const insertSubmissionSchema = createInsertSchema(submissions).pick({
   feedback: true,
 });
 
+export const courseFeedbacks = pgTable("course_feedbacks", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  rating: integer("rating"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCourseFeedbackSchema = createInsertSchema(courseFeedbacks).pick({
+  courseId: true,
+  userId: true,
+  content: true,
+  rating: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
@@ -131,3 +148,74 @@ export type InsertAssignment = z.infer<typeof insertAssignmentSchema>;
 
 export type Submission = typeof submissions.$inferSelect;
 export type InsertSubmission = z.infer<typeof insertSubmissionSchema>;
+
+export type CourseFeedback = typeof courseFeedbacks.$inferSelect;
+export type InsertCourseFeedback = z.infer<typeof insertCourseFeedbackSchema>;
+
+// Добавляем отношения между таблицами
+export const usersRelations = relations(users, ({ many }) => ({
+  courses: many(courses, { relationName: "teacher_courses" }),
+  enrollments: many(enrollments),
+  submissions: many(submissions),
+  courseFeedbacks: many(courseFeedbacks)
+}));
+
+export const coursesRelations = relations(courses, ({ one, many }) => ({
+  teacher: one(users, {
+    fields: [courses.teacherId],
+    references: [users.id],
+    relationName: "teacher_courses"
+  }),
+  enrollments: many(enrollments),
+  materials: many(materials),
+  assignments: many(assignments),
+  feedbacks: many(courseFeedbacks)
+}));
+
+export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+  user: one(users, {
+    fields: [enrollments.userId],
+    references: [users.id]
+  }),
+  course: one(courses, {
+    fields: [enrollments.courseId],
+    references: [courses.id]
+  })
+}));
+
+export const materialsRelations = relations(materials, ({ one }) => ({
+  course: one(courses, {
+    fields: [materials.courseId],
+    references: [courses.id]
+  })
+}));
+
+export const assignmentsRelations = relations(assignments, ({ one, many }) => ({
+  course: one(courses, {
+    fields: [assignments.courseId],
+    references: [courses.id]
+  }),
+  submissions: many(submissions)
+}));
+
+export const submissionsRelations = relations(submissions, ({ one }) => ({
+  assignment: one(assignments, {
+    fields: [submissions.assignmentId],
+    references: [assignments.id]
+  }),
+  user: one(users, {
+    fields: [submissions.userId],
+    references: [users.id]
+  })
+}));
+
+export const courseFeedbacksRelations = relations(courseFeedbacks, ({ one }) => ({
+  course: one(courses, {
+    fields: [courseFeedbacks.courseId],
+    references: [courses.id]
+  }),
+  user: one(users, {
+    fields: [courseFeedbacks.userId],
+    references: [users.id]
+  })
+}));

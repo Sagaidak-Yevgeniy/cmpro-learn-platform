@@ -16,10 +16,14 @@ import {
   InsertAssignment,
   submissions,
   Submission,
-  InsertSubmission
+  InsertSubmission,
+  courseFeedbacks,
+  CourseFeedback,
+  InsertCourseFeedback
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { DatabaseStorage } from "./database-storage";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -68,8 +72,16 @@ export interface IStorage {
   getSubmissionsByUser(userId: number): Promise<Submission[]>;
   updateSubmission(id: number, data: Partial<Submission>): Promise<Submission | undefined>;
   
+  // Course Feedback management
+  createCourseFeedback(feedback: InsertCourseFeedback): Promise<CourseFeedback>;
+  getCourseFeedback(id: number): Promise<CourseFeedback | undefined>;
+  getCourseFeedbacksByCourse(courseId: number): Promise<CourseFeedback[]>;
+  getCourseFeedbacksByUser(userId: number): Promise<CourseFeedback[]>;
+  updateCourseFeedback(id: number, data: Partial<CourseFeedback>): Promise<CourseFeedback | undefined>;
+  deleteCourseFeedback(id: number): Promise<boolean>;
+  
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 }
 
 export class MemStorage implements IStorage {
@@ -79,6 +91,7 @@ export class MemStorage implements IStorage {
   private materials: Map<number, Material>;
   private assignments: Map<number, Assignment>;
   private submissions: Map<number, Submission>;
+  private courseFeedbacks: Map<number, CourseFeedback>;
   private currentIds: {
     users: number;
     courses: number;
@@ -86,8 +99,9 @@ export class MemStorage implements IStorage {
     materials: number;
     assignments: number;
     submissions: number;
+    courseFeedbacks: number;
   };
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 
   constructor() {
     this.users = new Map();
@@ -96,13 +110,15 @@ export class MemStorage implements IStorage {
     this.materials = new Map();
     this.assignments = new Map();
     this.submissions = new Map();
+    this.courseFeedbacks = new Map();
     this.currentIds = {
       users: 1,
       courses: 1,
       enrollments: 1,
       materials: 1,
       assignments: 1,
-      submissions: 1
+      submissions: 1,
+      courseFeedbacks: 1
     };
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
@@ -113,7 +129,8 @@ export class MemStorage implements IStorage {
       username: "teacher@example.com",
       password: "password123",
       name: "Михаил Петрович",
-      role: "teacher"
+      role: "teacher",
+      avatar: null
     });
     
     // Create initial student user for testing
@@ -121,7 +138,8 @@ export class MemStorage implements IStorage {
       username: "student@example.com",
       password: "password123",
       name: "Анна",
-      role: "student"
+      role: "student",
+      avatar: null
     });
   }
 
@@ -322,6 +340,44 @@ export class MemStorage implements IStorage {
     this.submissions.set(id, updatedSubmission);
     return updatedSubmission;
   }
+  
+  // Course Feedback management
+  async createCourseFeedback(insertFeedback: InsertCourseFeedback): Promise<CourseFeedback> {
+    const id = this.currentIds.courseFeedbacks++;
+    const feedback: CourseFeedback = { ...insertFeedback, id, createdAt: new Date() };
+    this.courseFeedbacks.set(id, feedback);
+    return feedback;
+  }
+  
+  async getCourseFeedback(id: number): Promise<CourseFeedback | undefined> {
+    return this.courseFeedbacks.get(id);
+  }
+  
+  async getCourseFeedbacksByCourse(courseId: number): Promise<CourseFeedback[]> {
+    return Array.from(this.courseFeedbacks.values())
+      .filter((feedback) => feedback.courseId === courseId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Новые отзывы сначала
+  }
+  
+  async getCourseFeedbacksByUser(userId: number): Promise<CourseFeedback[]> {
+    return Array.from(this.courseFeedbacks.values())
+      .filter((feedback) => feedback.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async updateCourseFeedback(id: number, data: Partial<CourseFeedback>): Promise<CourseFeedback | undefined> {
+    const feedback = await this.getCourseFeedback(id);
+    if (!feedback) return undefined;
+    
+    const updatedFeedback = { ...feedback, ...data };
+    this.courseFeedbacks.set(id, updatedFeedback);
+    return updatedFeedback;
+  }
+  
+  async deleteCourseFeedback(id: number): Promise<boolean> {
+    return this.courseFeedbacks.delete(id);
+  }
 }
 
-export const storage = new MemStorage();
+// Используем реализацию для работы с PostgreSQL
+export const storage = new DatabaseStorage();

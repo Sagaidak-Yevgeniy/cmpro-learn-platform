@@ -8,7 +8,10 @@ import {
   insertEnrollmentSchema, 
   insertMaterialSchema,
   insertAssignmentSchema,
-  insertSubmissionSchema
+  insertSubmissionSchema,
+  insertCourseFeedbackSchema,
+  Course,
+  Assignment
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -631,6 +634,256 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Ошибка при получении статистики" });
+    }
+  });
+
+  // API для отзывов о курсах
+  app.get("/api/courses/:courseId/feedbacks", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      if (isNaN(courseId)) {
+        return res.status(400).json({ message: "Некорректный ID курса" });
+      }
+      
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+      
+      const feedbacks = await storage.getCourseFeedbacksByCourse(courseId);
+      
+      // Получаем информацию о пользователях
+      const feedbacksWithUsers = await Promise.all(
+        feedbacks.map(async (feedback) => {
+          const user = await storage.getUser(feedback.userId);
+          if (user) {
+            const { password, ...userWithoutPassword } = user;
+            return {
+              ...feedback,
+              user: userWithoutPassword
+            };
+          }
+          return feedback;
+        })
+      );
+      
+      res.json(feedbacksWithUsers);
+    } catch (error) {
+      console.error("Ошибка при получении отзывов:", error);
+      res.status(500).json({ message: "Ошибка при получении отзывов" });
+    }
+  });
+
+  app.post("/api/courses/:courseId/feedbacks", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+    
+    try {
+      const courseId = parseInt(req.params.courseId);
+      if (isNaN(courseId)) {
+        return res.status(400).json({ message: "Некорректный ID курса" });
+      }
+      
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+      
+      // Проверяем, является ли пользователь студентом, записанным на курс
+      if (req.user.role === "student") {
+        const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
+        if (!enrollment) {
+          return res.status(403).json({ message: "Вы должны быть записаны на курс, чтобы оставить отзыв" });
+        }
+      }
+      
+      const validatedData = insertCourseFeedbackSchema.parse({
+        courseId,
+        userId: req.user.id,
+        content: req.body.content,
+        rating: req.body.rating,
+        createdAt: new Date()
+      });
+      
+      const feedback = await storage.createCourseFeedback(validatedData);
+      
+      // Добавляем информацию о пользователе к ответу
+      const { password, ...userWithoutPassword } = req.user;
+      
+      res.status(201).json({
+        ...feedback,
+        user: userWithoutPassword
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      console.error("Ошибка при создании отзыва:", error);
+      res.status(500).json({ message: "Ошибка при создании отзыва" });
+    }
+  });
+
+  // API для получения отзыва пользователя о конкретном курсе
+  app.get("/api/courses/:courseId/feedbacks/my", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+    
+    try {
+      const courseId = parseInt(req.params.courseId);
+      if (isNaN(courseId)) {
+        return res.status(400).json({ message: "Некорректный ID курса" });
+      }
+      
+      // Ищем отзыв пользователя для данного курса
+      const userFeedbacks = await storage.getCourseFeedbacksByUser(req.user.id);
+      const courseFeedback = userFeedbacks.find(feedback => feedback.courseId === courseId);
+      
+      if (!courseFeedback) {
+        return res.status(404).json({ message: "Отзыв не найден" });
+      }
+      
+      res.json(courseFeedback);
+    } catch (error) {
+      console.error("Ошибка при получении отзыва:", error);
+      res.status(500).json({ message: "Ошибка при получении отзыва" });
+    }
+  });
+
+  // Обновление отзыва о курсе
+  app.patch("/api/feedbacks/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+    
+    try {
+      const feedbackId = parseInt(req.params.id);
+      if (isNaN(feedbackId)) {
+        return res.status(400).json({ message: "Некорректный ID отзыва" });
+      }
+      
+      // Проверяем, существует ли отзыв
+      const feedback = await storage.getCourseFeedback(feedbackId);
+      if (!feedback) {
+        return res.status(404).json({ message: "Отзыв не найден" });
+      }
+      
+      // Проверяем права доступа (только автор может обновлять свой отзыв)
+      if (feedback.userId !== req.user.id) {
+        return res.status(403).json({ message: "Вы можете обновлять только свои отзывы" });
+      }
+      
+      // Валидация данных для обновления
+      const updateData = {
+        content: req.body.content,
+        rating: req.body.rating
+      };
+      
+      // Обновляем отзыв
+      const updatedFeedback = await storage.updateCourseFeedback(feedbackId, updateData);
+      
+      res.json(updatedFeedback);
+    } catch (error) {
+      console.error("Ошибка при обновлении отзыва:", error);
+      res.status(500).json({ message: "Ошибка при обновлении отзыва" });
+    }
+  });
+
+  // API для создания отзыва
+  app.post("/api/feedbacks", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+    
+    try {
+      const courseId = req.body.courseId;
+      if (!courseId) {
+        return res.status(400).json({ message: "ID курса обязателен" });
+      }
+      
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+      
+      // Проверяем, является ли пользователь студентом, записанным на курс
+      if (req.user.role === "student") {
+        const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
+        if (!enrollment) {
+          return res.status(403).json({ message: "Вы должны быть записаны на курс, чтобы оставить отзыв" });
+        }
+      }
+      
+      // Проверяем, есть ли уже отзыв от этого пользователя для данного курса
+      const userFeedbacks = await storage.getCourseFeedbacksByUser(req.user.id);
+      const existingFeedback = userFeedbacks.find(feedback => feedback.courseId === courseId);
+      
+      if (existingFeedback) {
+        return res.status(400).json({ 
+          message: "Вы уже оставили отзыв для этого курса. Используйте PATCH для обновления." 
+        });
+      }
+      
+      const validatedData = insertCourseFeedbackSchema.parse({
+        courseId,
+        userId: req.user.id,
+        content: req.body.content,
+        rating: req.body.rating,
+        createdAt: new Date()
+      });
+      
+      const feedback = await storage.createCourseFeedback(validatedData);
+      
+      // Добавляем информацию о пользователе к ответу
+      const { password, ...userWithoutPassword } = req.user;
+      
+      res.status(201).json({
+        ...feedback,
+        user: userWithoutPassword
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      console.error("Ошибка при создании отзыва:", error);
+      res.status(500).json({ message: "Ошибка при создании отзыва" });
+    }
+  });
+
+  app.delete("/api/feedbacks/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+    
+    try {
+      const feedbackId = parseInt(req.params.id);
+      if (isNaN(feedbackId)) {
+        return res.status(400).json({ message: "Некорректный ID отзыва" });
+      }
+      
+      const feedback = await storage.getCourseFeedback(feedbackId);
+      if (!feedback) {
+        return res.status(404).json({ message: "Отзыв не найден" });
+      }
+      
+      // Проверка прав: пользователь может удалить только свой отзыв, преподаватель - отзыв к своему курсу
+      if (feedback.userId !== req.user.id) {
+        if (req.user.role === "teacher") {
+          const course = await storage.getCourse(feedback.courseId);
+          if (!course || course.teacherId !== req.user.id) {
+            return res.status(403).json({ message: "У вас нет прав для удаления этого отзыва" });
+          }
+        } else {
+          return res.status(403).json({ message: "У вас нет прав для удаления этого отзыва" });
+        }
+      }
+      
+      await storage.deleteCourseFeedback(feedbackId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Ошибка при удалении отзыва:", error);
+      res.status(500).json({ message: "Ошибка при удалении отзыва" });
     }
   });
 
