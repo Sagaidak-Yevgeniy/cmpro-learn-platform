@@ -6,38 +6,28 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto py-8 px-4 overflow-hidden sm:px-6 lg:px-8">
         <nav className="flex flex-wrap justify-center">
           <div className="px-5 py-2">
-            <Link href="/about">
-              <a className="text-base text-gray-500 hover:text-gray-900">
-                О платформе
-              </a>
+            <Link href="/about" className="text-base text-gray-500 hover:text-gray-900">
+              О платформе
             </Link>
           </div>
           <div className="px-5 py-2">
-            <Link href="/support">
-              <a className="text-base text-gray-500 hover:text-gray-900">
-                Поддержка
-              </a>
+            <Link href="/support" className="text-base text-gray-500 hover:text-gray-900">
+              Поддержка
             </Link>
           </div>
           <div className="px-5 py-2">
-            <Link href="/contacts">
-              <a className="text-base text-gray-500 hover:text-gray-900">
-                Контакты
-              </a>
+            <Link href="/contacts" className="text-base text-gray-500 hover:text-gray-900">
+              Контакты
             </Link>
           </div>
           <div className="px-5 py-2">
-            <Link href="/terms">
-              <a className="text-base text-gray-500 hover:text-gray-900">
-                Условия использования
-              </a>
+            <Link href="/terms" className="text-base text-gray-500 hover:text-gray-900">
+              Условия использования
             </Link>
           </div>
           <div className="px-5 py-2">
-            <Link href="/privacy">
-              <a className="text-base text-gray-500 hover:text-gray-900">
-                Политика конфиденциальности
-              </a>
+            <Link href="/privacy" className="text-base text-gray-500 hover:text-gray-900">
+              Политика конфиденциальности
             </Link>
           </div>
         </nav>

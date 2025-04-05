@@ -10,10 +10,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
+import CourseFeedback from "@/components/courses/course-feedback";
 
 export default function CourseDetailsPage() {
   const { id } = useParams();
-  const courseId = parseInt(id);
+  const courseId = parseInt(id || "0");
   const [_, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -160,6 +161,7 @@ export default function CourseDetailsPage() {
               <div className="flex items-center space-x-2 text-[#48BB78]">
                 <CheckCircle className="h-5 w-5" />
                 <span className="font-medium">Вы записаны на этот курс</span>
+                <CourseFeedback courseId={courseId} courseName={course.title} />
               </div>
             )}
             
