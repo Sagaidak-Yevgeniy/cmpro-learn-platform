@@ -5,12 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import CourseList from "@/components/courses/course-list";
 import { Course } from "@shared/schema";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import CourseCard from "@/components/courses/course-card"; // Added import for CourseCard
+
 
 export default function HomePage() {
   const { user } = useAuth();
-  
+
   const { data: courses } = useQuery<Course[]>({
     queryKey: ["/api/courses"],
     enabled: !user // Only fetch featured courses for guests
@@ -71,7 +71,7 @@ export default function HomePage() {
               Все материалы регулярно обновляются и соответствуют современным стандартам образования.
             </div>
           </div>
-          
+
           <div className="bg-white overflow-hidden shadow rounded-lg p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-primary rounded-md p-3">
@@ -85,7 +85,7 @@ export default function HomePage() {
               Каждый студент может выстраивать своё обучение по индивидуальной траектории.
             </div>
           </div>
-          
+
           <div className="bg-white overflow-hidden shadow rounded-lg p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0 bg-primary rounded-md p-3">
@@ -116,7 +116,7 @@ export default function HomePage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Программирование</h3>
               <p className="text-sm text-gray-600">43 курса</p>
             </Link>
-            
+
             <Link href="/courses?category=business" className="bg-white rounded-lg shadow-md p-6 transform hover:scale-105 transition duration-300 cursor-pointer">
               <div className="flex items-center justify-center h-12 w-12 rounded-md bg-[#FF9800] text-white mb-4">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,7 +126,7 @@ export default function HomePage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Бизнес и менеджмент</h3>
               <p className="text-sm text-gray-600">35 курсов</p>
             </Link>
-            
+
             <Link href="/courses?category=science" className="bg-white rounded-lg shadow-md p-6 transform hover:scale-105 transition duration-300 cursor-pointer">
               <div className="flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white mb-4">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -136,7 +136,7 @@ export default function HomePage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Наука и инженерия</h3>
               <p className="text-sm text-gray-600">28 курсов</p>
             </Link>
-            
+
             <Link href="/courses?category=humanities" className="bg-white rounded-lg shadow-md p-6 transform hover:scale-105 transition duration-300 cursor-pointer">
               <div className="flex items-center justify-center h-12 w-12 rounded-md bg-[#48BB78] text-white mb-4">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,7 +154,11 @@ export default function HomePage() {
       {courses && courses.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">Популярные курсы</h2>
-          <CourseList courses={courses.slice(0, 3)} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Replaced CourseList with CourseCard mapping */}
+            {courses.map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
+          </div>
           <div className="flex justify-center mt-8">
             <Link href="/courses" className="no-underline">
               <Button className="px-8">Смотреть все курсы</Button>
@@ -174,7 +178,7 @@ function StudentHomePage() {
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold mb-8">Панель студента</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader>
@@ -244,7 +248,7 @@ function TeacherHomePage() {
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold mb-8">Панель преподавателя</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader>
