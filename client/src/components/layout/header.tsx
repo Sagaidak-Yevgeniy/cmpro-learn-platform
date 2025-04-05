@@ -1,6 +1,8 @@
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +14,33 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User as UserIcon, Settings, BookOpen, Home, List } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
+interface Notification {
+  title: string;
+  message: string;
+}
+
 export default function Header() {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const ws = new WebSocket(`ws://${window.location.host}/ws/notifications`);
+
+    ws.onmessage = (event) => {
+      const notification = JSON.parse(event.data);
+      setNotifications(prev => [notification, ...prev]);
+      toast({
+        title: notification.title,
+        description: notification.message,
+      });
+    };
+
+    return () => ws.close();
+  }, [user]);
 
   return (
     <header className="bg-white shadow-md">
@@ -39,26 +65,6 @@ export default function Header() {
                 <Link href="/my-courses" className={`${location === '/my-courses' ? 'border-primary text-gray-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-primary'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}>
                   Мои курсы
                 </Link>
-
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  
-  useEffect(() => {
-    if (!user) return;
-    
-    const ws = new WebSocket(`ws://${window.location.host}/ws/notifications`);
-    
-    ws.onmessage = (event) => {
-      const notification = JSON.parse(event.data);
-      setNotifications(prev => [notification, ...prev]);
-      toast({
-        title: notification.title,
-        description: notification.message,
-      });
-    };
-    
-    return () => ws.close();
-  }, [user]);
-
               )}
               {user && user.role === "teacher" && (
                 <Link href="/teacher" className={`${location === '/teacher' ? 'border-primary text-gray-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-primary'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}>
@@ -105,7 +111,7 @@ export default function Header() {
                     <span>Настройки</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => logoutMutation.mutate()}
                     disabled={logoutMutation.isPending}
                   >
@@ -189,7 +195,7 @@ export default function Header() {
                           <Settings className="h-5 w-5" />
                           Настройки
                         </button>
-                        <button 
+                        <button
                           className="flex w-full items-center gap-3 text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-3 py-2 text-base font-medium"
                           onClick={() => logoutMutation.mutate()}
                           disabled={logoutMutation.isPending}
