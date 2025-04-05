@@ -37,6 +37,9 @@ export const insertCourseSchema = createInsertSchema(courses, {
   // Делаем некоторые поля необязательными для вставки
   imageUrl: z.string().nullable().optional(),
   isActive: z.boolean().default(true),
+  // Добавляем поддержку дат как в строковом формате, так и в формате объекта Date
+  startDate: z.string().or(z.date()),
+  endDate: z.string().or(z.date()),
 }).pick({
   title: true,
   description: true,

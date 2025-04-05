@@ -68,7 +68,29 @@ export class DatabaseStorage implements IStorage {
 
   // Course management
   async createCourse(insertCourse: InsertCourse): Promise<Course> {
-    const [course] = await db.insert(courses).values(insertCourse).returning();
+    // Преобразуем даты в объекты Date, если они переданы как строки
+    const startDate = insertCourse.startDate instanceof Date 
+      ? insertCourse.startDate 
+      : new Date(insertCourse.startDate);
+    
+    const endDate = insertCourse.endDate instanceof Date 
+      ? insertCourse.endDate 
+      : new Date(insertCourse.endDate);
+    
+    // Формируем данные для вставки с правильными типами
+    const insertData = {
+      title: insertCourse.title,
+      description: insertCourse.description,
+      category: insertCourse.category,
+      duration: insertCourse.duration,
+      teacherId: insertCourse.teacherId,
+      startDate: startDate,
+      endDate: endDate,
+      imageUrl: insertCourse.imageUrl ?? null,
+      isActive: insertCourse.isActive ?? true
+    };
+    
+    const [course] = await db.insert(courses).values(insertData).returning();
     return course;
   }
 
