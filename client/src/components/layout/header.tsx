@@ -26,7 +26,7 @@ export default function Header() {
                 <span className="text-primary font-bold text-2xl cursor-pointer">Учебная Платформа</span>
               </Link>
             </div>
-            
+
             {/* Desktop Navigation */}
             <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link href="/" className={`${location === '/' ? 'border-primary text-gray-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-primary'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}>
@@ -35,11 +35,6 @@ export default function Header() {
               <Link href="/courses" className={`${location === '/courses' || location.includes('/courses/') ? 'border-primary text-gray-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-primary'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}>
                 Курсы
               </Link>
-              {user && user.role === "student" && (
-                <Link href="/my-courses" className={`${location === '/my-courses' ? 'border-primary text-gray-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-primary'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}>
-                  Мои курсы
-                </Link>
-              )}
               {user && user.role === "teacher" && (
                 <Link href="/teacher" className={`${location === '/teacher' ? 'border-primary text-gray-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-primary'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}>
                   Панель преподавателя
@@ -47,7 +42,7 @@ export default function Header() {
               )}
             </nav>
           </div>
-          
+
           {/* User menu */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
             {user ? (
@@ -68,14 +63,7 @@ export default function Header() {
                     <p className="text-xs text-gray-500">{user.username}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  {user.role === "student" ? (
-                    <Link href="/my-courses">
-                      <DropdownMenuItem>
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        <span>Мои курсы</span>
-                      </DropdownMenuItem>
-                    </Link>
-                  ) : (
+                  {user.role === "teacher" && (
                     <Link href="/teacher">
                       <DropdownMenuItem>
                         <BookOpen className="mr-2 h-4 w-4" />
@@ -116,7 +104,7 @@ export default function Header() {
               </div>
             )}
           </div>
-          
+
           {/* Mobile menu button */}
           <div className="flex items-center sm:hidden">
             <Sheet>
@@ -137,12 +125,6 @@ export default function Header() {
                       <BookOpen className="h-5 w-5" />
                       Курсы
                     </Link>
-                    {user && user.role === "student" && (
-                      <Link href="/my-courses" className="flex items-center gap-3 text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-3 py-2 text-base font-medium">
-                        <BookOpen className="h-5 w-5" />
-                        Мои курсы
-                      </Link>
-                    )}
                     {user && user.role === "teacher" && (
                       <Link href="/teacher" className="flex items-center gap-3 text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-3 py-2 text-base font-medium">
                         <BookOpen className="h-5 w-5" />
@@ -150,7 +132,7 @@ export default function Header() {
                       </Link>
                     )}
                   </div>
-                  
+
                   {user ? (
                     <div className="pt-4 pb-3 border-t border-gray-200">
                       <div className="flex items-center px-4">
