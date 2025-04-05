@@ -39,6 +39,26 @@ export default function Header() {
                 <Link href="/my-courses" className={`${location === '/my-courses' ? 'border-primary text-gray-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-primary'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}>
                   Мои курсы
                 </Link>
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  
+  useEffect(() => {
+    if (!user) return;
+    
+    const ws = new WebSocket(`ws://${window.location.host}/ws/notifications`);
+    
+    ws.onmessage = (event) => {
+      const notification = JSON.parse(event.data);
+      setNotifications(prev => [notification, ...prev]);
+      toast({
+        title: notification.title,
+        description: notification.message,
+      });
+    };
+    
+    return () => ws.close();
+  }, [user]);
+
               )}
               {user && user.role === "teacher" && (
                 <Link href="/teacher" className={`${location === '/teacher' ? 'border-primary text-gray-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-primary'} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}>

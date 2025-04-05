@@ -156,15 +156,19 @@ export type Material = typeof materials.$inferSelect;
 export type InsertMaterial = z.infer<typeof insertMaterialSchema>;
 
 export type Assignment = typeof assignments.$inferSelect;
-export type InsertAssignment = z.infer<typeof insertAssignmentSchema>;
+export type InsertAssignment = typeof assignments.$inferInsert;
 
-export type Submission = typeof submissions.$inferSelect;
-export type InsertSubmission = z.infer<typeof insertSubmissionSchema>;
+export const chatMessages = pgTable('chat_messages', {
+  id: serial('id').primaryKey(),
+  courseId: integer('course_id').references(() => courses.id),
+  userId: integer('user_id').references(() => users.id),
+  content: text('content').notNull(),
+  timestamp: timestamp('timestamp').defaultNow(),
+});
 
-export type CourseFeedback = typeof courseFeedbacks.$inferSelect;
-export type InsertCourseFeedback = z.infer<typeof insertCourseFeedbackSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
 
-// Добавляем отношения между таблицами
 export const usersRelations = relations(users, ({ many }) => ({
   courses: many(courses, { relationName: "teacher_courses" }),
   enrollments: many(enrollments),

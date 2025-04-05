@@ -86,7 +86,21 @@ export default function CourseChat({ courseId }: { courseId: number }) {
 
   useEffect(() => {
     fetchMessages();
-    // Добавить здесь WebSocket подключение для real-time чата
+    
+    const ws = new WebSocket(`ws://${window.location.host}/ws/chat/${courseId}`);
+    
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      setMessages(prev => [...prev, message]);
+    };
+    
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+    
+    return () => {
+      ws.close();
+    };
   }, [courseId]);
 
   return (
