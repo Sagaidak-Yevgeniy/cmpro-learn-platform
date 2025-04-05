@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import CourseList from "@/components/courses/course-list";
 import { Course } from "@shared/schema";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default function HomePage() {
   const { user } = useAuth();
