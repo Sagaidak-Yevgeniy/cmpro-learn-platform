@@ -110,7 +110,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const enrollmentData = insertEnrollmentSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: req.user.id,
+        enrollmentDate: new Date(),
+        progress: 0
       });
       
       // Проверка существования курса
