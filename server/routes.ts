@@ -257,8 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Создать новый отзыв
       const feedback = await storage.createCourseFeedback({
         ...feedbackData,
-        rating: feedbackData.rating || null,
-        createdAt: new Date()
+        rating: feedbackData.rating || null
       });
       
       res.status(201).json(feedback);
@@ -367,8 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const assignment = await storage.createAssignment({
-        ...assignmentData,
-        createdAt: new Date()
+        ...assignmentData
       });
       
       res.status(201).json(assignment);
@@ -477,10 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Создать новую работу
       const submission = await storage.createSubmission({
-        ...submissionData,
-        submitted: new Date(),
-        grade: null,
-        feedback: null
+        ...submissionData
       });
       
       res.status(201).json(submission);

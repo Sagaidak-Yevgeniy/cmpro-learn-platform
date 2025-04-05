@@ -156,7 +156,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentIds.users++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      role: insertUser.role || "student",
+      avatar: insertUser.avatar || null
+    };
     this.users.set(id, user);
     return user;
   }
@@ -173,7 +178,12 @@ export class MemStorage implements IStorage {
   // Course management
   async createCourse(insertCourse: InsertCourse): Promise<Course> {
     const id = this.currentIds.courses++;
-    const course: Course = { ...insertCourse, id };
+    const course: Course = { 
+      ...insertCourse, 
+      id,
+      imageUrl: insertCourse.imageUrl || null,
+      isActive: insertCourse.isActive ?? true
+    };
     this.courses.set(id, course);
     return course;
   }
@@ -208,7 +218,13 @@ export class MemStorage implements IStorage {
   // Enrollment management
   async createEnrollment(insertEnrollment: InsertEnrollment): Promise<Enrollment> {
     const id = this.currentIds.enrollments++;
-    const enrollment: Enrollment = { ...insertEnrollment, id };
+    const enrollment: Enrollment = { 
+      ...insertEnrollment, 
+      id,
+      progress: insertEnrollment.progress ?? 0,
+      enrollmentDate: insertEnrollment.enrollmentDate ?? new Date(),
+      grade: insertEnrollment.grade ?? null
+    };
     this.enrollments.set(id, enrollment);
     return enrollment;
   }
@@ -251,7 +267,13 @@ export class MemStorage implements IStorage {
   // Materials management
   async createMaterial(insertMaterial: InsertMaterial): Promise<Material> {
     const id = this.currentIds.materials++;
-    const material: Material = { ...insertMaterial, id, createdAt: new Date() };
+    const material: Material = { 
+      ...insertMaterial, 
+      id, 
+      createdAt: new Date(),
+      description: insertMaterial.description ?? null,
+      order: insertMaterial.order ?? 0
+    };
     this.materials.set(id, material);
     return material;
   }
@@ -282,7 +304,12 @@ export class MemStorage implements IStorage {
   // Assignments management
   async createAssignment(insertAssignment: InsertAssignment): Promise<Assignment> {
     const id = this.currentIds.assignments++;
-    const assignment: Assignment = { ...insertAssignment, id, createdAt: new Date() };
+    const assignment: Assignment = { 
+      ...insertAssignment, 
+      id, 
+      createdAt: new Date(),
+      description: insertAssignment.description ?? "Без описания"
+    };
     this.assignments.set(id, assignment);
     return assignment;
   }
@@ -313,7 +340,13 @@ export class MemStorage implements IStorage {
   // Submissions management
   async createSubmission(insertSubmission: InsertSubmission): Promise<Submission> {
     const id = this.currentIds.submissions++;
-    const submission: Submission = { ...insertSubmission, id, submitted: new Date() };
+    const submission: Submission = { 
+      ...insertSubmission, 
+      id, 
+      submitted: new Date(),
+      feedback: insertSubmission.feedback ?? null,
+      grade: insertSubmission.grade ?? null
+    };
     this.submissions.set(id, submission);
     return submission;
   }
@@ -344,7 +377,12 @@ export class MemStorage implements IStorage {
   // Course Feedback management
   async createCourseFeedback(insertFeedback: InsertCourseFeedback): Promise<CourseFeedback> {
     const id = this.currentIds.courseFeedbacks++;
-    const feedback: CourseFeedback = { ...insertFeedback, id, createdAt: new Date() };
+    const feedback: CourseFeedback = { 
+      ...insertFeedback, 
+      id, 
+      createdAt: new Date(),
+      rating: insertFeedback.rating ?? null
+    };
     this.courseFeedbacks.set(id, feedback);
     return feedback;
   }
