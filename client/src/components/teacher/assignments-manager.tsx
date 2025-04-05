@@ -27,6 +27,26 @@ interface AssignmentsManagerProps {
 }
 
 export default function AssignmentsManager({ courseId }: AssignmentsManagerProps) {
+  const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
+  
+  useEffect(() => {
+    const checkNewSubmissions = async () => {
+      try {
+        const response = await fetch(`/api/courses/${courseId}/submissions/new`);
+        if (response.ok) {
+          const data = await response.json();
+          setHasNewSubmissions(data.hasNew);
+        }
+      } catch (error) {
+        console.error('Ошибка проверки новых работ:', error);
+      }
+    };
+    
+    checkNewSubmissions();
+    const interval = setInterval(checkNewSubmissions, 60000); // Проверка каждую минуту
+    
+    return () => clearInterval(interval);
+  }, [courseId]);
   const { toast } = useToast();
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);

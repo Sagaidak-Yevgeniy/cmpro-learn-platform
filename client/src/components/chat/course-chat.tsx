@@ -17,6 +17,37 @@ interface Message {
 }
 
 export default function CourseChat({ courseId }: { courseId: number }) {
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setAttachments(Array.from(e.target.files));
+    }
+  };
+  
+  const sendMessageWithAttachments = async () => {
+    if (!newMessage.trim() && attachments.length === 0) return;
+    
+    const formData = new FormData();
+    formData.append('content', newMessage);
+    attachments.forEach(file => formData.append('attachments', file));
+    
+    try {
+      const response = await fetch(`/api/courses/${courseId}/chat`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        setNewMessage("");
+        setAttachments([]);
+        fetchMessages();
+      }
+    } catch (error) {
+      console.error('Ошибка отправки сообщения:', error);
+    }
+  };
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");

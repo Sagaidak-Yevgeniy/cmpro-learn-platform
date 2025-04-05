@@ -99,6 +99,25 @@ export default function CourseDetailsPage() {
   const isStudent = user?.role === "student";
   const isCourseOwner = isTeacher && user?.id === course.teacherId;
 
+  const downloadMaterial = async (materialId: number) => {
+    // Implement download logic here.  This is a placeholder.  You'll need to fetch the material URL and trigger a download.
+    try {
+      const response = await apiRequest("GET", `/api/materials/${materialId}/download`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = materials?.find(m => m.id === materialId)?.title || "material.txt";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch(error) {
+      console.error("Error downloading material:", error);
+      toast({ title: "Ошибка загрузки материала", description: "Пожалуйста, попробуйте позже", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -236,13 +255,22 @@ export default function CourseDetailsPage() {
                                 {material.type}
                               </span>
                             </div>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => window.open(material.url, '_blank')}
-                            >
-                              Открыть
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => window.open(material.url, '_blank')}
+                              >
+                                Открыть
+                              </Button>
+                              <Button 
+                                variant="secondary" 
+                                size="sm"
+                                onClick={() => downloadMaterial(material.id)}
+                              >
+                                Скачать
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
