@@ -45,25 +45,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      console.log("Тело запроса:", req.body);
+      
+      // Проверяем наличие обязательных полей и устанавливаем значения по умолчанию
+      const requestData = {
+        ...req.body,
+        teacherId: req.user.id,
+        imageUrl: req.body.imageUrl || null,
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true
+      };
+      
+      console.log("Данные запроса после преобразования:", requestData);
+      
       // Расширяем схему, чтобы преобразовать строковые даты в объекты Date
-      const courseSchemaWithDateConversion = insertCourseSchema.transform((data) => ({
-        ...data,
-        startDate: data.startDate instanceof Date ? data.startDate : new Date(data.startDate),
-        endDate: data.endDate instanceof Date ? data.endDate : new Date(data.endDate)
-      }));
-      
-      const courseData = courseSchemaWithDateConversion.parse(req.body);
-      
-      // Добавляем teacherId из аутентифицированного пользователя
-      const course = await storage.createCourse({
-        ...courseData,
-        teacherId: req.user.id
+      const courseSchemaWithDateConversion = insertCourseSchema.transform((data) => {
+        console.log("Трансформация данных:", data);
+        return {
+          ...data,
+          startDate: data.startDate instanceof Date ? data.startDate : new Date(data.startDate),
+          endDate: data.endDate instanceof Date ? data.endDate : new Date(data.endDate)
+        };
       });
+      
+      const courseData = courseSchemaWithDateConversion.parse(requestData);
+      console.log("Данные после валидации:", courseData);
+      
+      // Создаем курс
+      const course = await storage.createCourse(courseData);
       
       res.status(201).json(course);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Неверные данные курса", errors: error.errors });
+        console.error("Ошибка валидации ZOD:", error.errors);
+        return res.status(400).json({ 
+          message: "Неверные данные курса", 
+          errors: error.errors,
+          details: error.format()
+        });
       }
       console.error("Ошибка при создании курса:", error);
       res.status(500).json({ message: "Ошибка при создании курса" });
@@ -360,13 +378,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      console.log("Тело запроса для задания:", req.body);
+      
       // Расширяем схему для преобразования строковой даты в объект Date
-      const assignmentSchemaWithDateConversion = insertAssignmentSchema.transform((data) => ({
-        ...data,
-        dueDate: data.dueDate instanceof Date ? data.dueDate : new Date(data.dueDate)
-      }));
+      const assignmentSchemaWithDateConversion = insertAssignmentSchema.transform((data) => {
+        console.log("Трансформация данных задания:", data);
+        return {
+          ...data,
+          dueDate: data.dueDate instanceof Date ? data.dueDate : new Date(data.dueDate)
+        };
+      });
       
       const assignmentData = assignmentSchemaWithDateConversion.parse(req.body);
+      console.log("Данные задания после валидации:", assignmentData);
       
       // Проверка существования курса
       const course = await storage.getCourse(assignmentData.courseId);
@@ -386,7 +410,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(assignment);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Неверные данные задания", errors: error.errors });
+        console.error("Ошибка валидации ZOD при создании задания:", error.errors);
+        return res.status(400).json({ 
+          message: "Неверные данные задания", 
+          errors: error.errors,
+          details: error.format()
+        });
       }
       console.error("Ошибка при создании задания:", error);
       res.status(500).json({ message: "Ошибка при создании задания" });

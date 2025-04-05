@@ -83,6 +83,13 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
   // Мутация для создания курса
   const createCourseMutation = useMutation({
     mutationFn: async (data: CreateCourseFormValues) => {
+      console.log("Данные формы для создания курса:", data);
+      
+      // Проверяем, что все обязательные поля заполнены
+      if (!data.title || !data.description || !data.category || !data.duration || !data.startDate || !data.endDate) {
+        throw new Error("Заполните все обязательные поля");
+      }
+      
       // Преобразуем даты в строку ISO для корректной передачи на сервер
       const formattedData = {
         ...data,
@@ -91,7 +98,14 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
         teacherId: user?.id,
       };
       
+      console.log("Форматированные данные для отправки:", formattedData);
+      
       const res = await apiRequest("POST", "/api/courses", formattedData);
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Ошибка ответа сервера:", errorData);
+        throw new Error(errorData.message || "Ошибка при создании курса");
+      }
       return await res.json();
     },
     onSuccess: () => {

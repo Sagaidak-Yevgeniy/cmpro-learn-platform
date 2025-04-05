@@ -33,7 +33,11 @@ export const courses = pgTable("courses", {
   isActive: boolean("is_active").notNull().default(true),
 });
 
-export const insertCourseSchema = createInsertSchema(courses).pick({
+export const insertCourseSchema = createInsertSchema(courses, {
+  // Делаем некоторые поля необязательными для вставки
+  imageUrl: z.string().nullable().optional(),
+  isActive: z.boolean().default(true),
+}).pick({
   title: true,
   description: true,
   category: true,
@@ -91,7 +95,11 @@ export const assignments = pgTable("assignments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertAssignmentSchema = createInsertSchema(assignments).pick({
+export const insertAssignmentSchema = createInsertSchema(assignments, {
+  // Задаем настройки валидации
+  description: z.string(),
+  dueDate: z.string().or(z.date()),
+}).pick({
   courseId: true,
   title: true,
   description: true,

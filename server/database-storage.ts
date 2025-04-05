@@ -176,10 +176,20 @@ export class DatabaseStorage implements IStorage {
 
   // Assignments management
   async createAssignment(insertAssignment: InsertAssignment): Promise<Assignment> {
-    const [assignment] = await db.insert(assignments).values({
-      ...insertAssignment,
-      createdAt: new Date()
-    }).returning();
+    // Убеждаемся, что dueDate - это объект Date
+    const dueDate = insertAssignment.dueDate instanceof Date 
+      ? insertAssignment.dueDate 
+      : new Date(insertAssignment.dueDate);
+    
+    // Формируем данные для вставки
+    const insertData = {
+      title: insertAssignment.title,
+      description: insertAssignment.description,
+      courseId: insertAssignment.courseId,
+      dueDate: dueDate
+    };
+    
+    const [assignment] = await db.insert(assignments).values(insertData).returning();
     return assignment;
   }
 

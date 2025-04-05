@@ -304,11 +304,18 @@ export class MemStorage implements IStorage {
   // Assignments management
   async createAssignment(insertAssignment: InsertAssignment): Promise<Assignment> {
     const id = this.currentIds.assignments++;
+    
+    // Преобразуем дату в объект Date, если она передана как строка
+    const dueDate = insertAssignment.dueDate instanceof Date 
+      ? insertAssignment.dueDate 
+      : new Date(insertAssignment.dueDate);
+    
     const assignment: Assignment = { 
       ...insertAssignment, 
       id, 
       createdAt: new Date(),
-      description: insertAssignment.description ?? "Без описания"
+      description: insertAssignment.description ?? "Без описания",
+      dueDate, // убеждаемся, что это объект Date
     };
     this.assignments.set(id, assignment);
     return assignment;

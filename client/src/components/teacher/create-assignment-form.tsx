@@ -57,6 +57,13 @@ export default function CreateAssignmentForm({ courseId, onSuccess }: CreateAssi
   // Мутация для создания задания
   const createAssignmentMutation = useMutation({
     mutationFn: async (data: CreateAssignmentFormValues) => {
+      console.log("Данные формы для создания задания:", data);
+      
+      // Проверяем, что все обязательные поля заполнены
+      if (!data.title || !data.description || !data.dueDate) {
+        throw new Error("Заполните все обязательные поля");
+      }
+      
       // Преобразуем дату в строку ISO для корректной передачи на сервер
       const formattedData = {
         ...data,
@@ -64,7 +71,14 @@ export default function CreateAssignmentForm({ courseId, onSuccess }: CreateAssi
         courseId,
       };
       
+      console.log("Форматированные данные задания для отправки:", formattedData);
+      
       const res = await apiRequest("POST", "/api/assignments", formattedData);
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Ошибка ответа сервера при создании задания:", errorData);
+        throw new Error(errorData.message || "Ошибка при создании задания");
+      }
       return await res.json();
     },
     onSuccess: () => {
