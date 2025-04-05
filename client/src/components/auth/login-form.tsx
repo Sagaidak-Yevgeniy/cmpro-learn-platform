@@ -103,9 +103,9 @@ export default function LoginForm() {
               </FormItem>
             )}
           />
-          <Link href="/reset-password" className="text-sm text-primary hover:text-primary/90">
+          <a href="#" className="text-sm text-primary hover:text-primary/90">
             Забыли пароль?
-          </Link>
+          </a>
         </div>
         
         <Button
