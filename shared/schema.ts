@@ -17,6 +17,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   name: true,
   role: true,
+  avatar: true,
 });
 
 export const courses = pgTable("courses", {

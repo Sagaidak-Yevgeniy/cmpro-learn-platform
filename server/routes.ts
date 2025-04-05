@@ -31,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!course) {
       return res.status(404).json({ message: "Курс не найден" });
     }
-
+    
     res.json(course);
   });
 
@@ -45,116 +45,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const validatedData = insertCourseSchema.parse(req.body);
-      const course = await storage.createCourse(validatedData);
+      const courseData = insertCourseSchema.parse(req.body);
+      
+      // Добавляем teacherId из аутентифицированного пользователя
+      const course = await storage.createCourse({
+        ...courseData,
+        teacherId: req.user.id
+      });
+      
       res.status(201).json(course);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
+        return res.status(400).json({ message: "Неверные данные курса", errors: error.errors });
       }
       res.status(500).json({ message: "Ошибка при создании курса" });
     }
   });
 
-  app.put("/api/courses/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-
-    if (req.user?.role !== "teacher") {
-      return res.status(403).json({ message: "Только преподаватели могут обновлять курсы" });
-    }
-
-    const courseId = parseInt(req.params.id);
-    const course = await storage.getCourse(courseId);
-    
-    if (!course) {
-      return res.status(404).json({ message: "Курс не найден" });
-    }
-
-    if (course.teacherId !== req.user.id) {
-      return res.status(403).json({ message: "Вы можете редактировать только свои курсы" });
-    }
-
-    try {
-      const updatedCourse = await storage.updateCourse(courseId, req.body);
-      res.json(updatedCourse);
-    } catch (error) {
-      res.status(500).json({ message: "Ошибка при обновлении курса" });
-    }
-  });
-
-  app.delete("/api/courses/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-
-    if (req.user?.role !== "teacher") {
-      return res.status(403).json({ message: "Только преподаватели могут удалять курсы" });
-    }
-
-    const courseId = parseInt(req.params.id);
-    const course = await storage.getCourse(courseId);
-    
-    if (!course) {
-      return res.status(404).json({ message: "Курс не найден" });
-    }
-
-    if (course.teacherId !== req.user.id) {
-      return res.status(403).json({ message: "Вы можете удалять только свои курсы" });
-    }
-
-    try {
-      await storage.deleteCourse(courseId);
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Ошибка при удалении курса" });
-    }
-  });
-
-  // Course enrollments
-  app.post("/api/enrollments", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-
-    // Only students can enroll in courses
-    if (req.user?.role !== "student") {
-      return res.status(403).json({ message: "Только студенты могут записаться на курс" });
-    }
-
-    try {
-      const validatedData = insertEnrollmentSchema.parse({
-        ...req.body,
-        userId: req.user.id
-      });
-      
-      // Check if the course exists
-      const course = await storage.getCourse(validatedData.courseId);
-      if (!course) {
-        return res.status(404).json({ message: "Курс не найден" });
-      }
-      
-      // Check if the user is already enrolled
-      const existingEnrollment = await storage.getEnrollmentByUserAndCourse(
-        req.user.id, 
-        validatedData.courseId
-      );
-      
-      if (existingEnrollment) {
-        return res.status(400).json({ message: "Вы уже записаны на этот курс" });
-      }
-
-      const enrollment = await storage.createEnrollment(validatedData);
-      res.status(201).json(enrollment);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
-      }
-      res.status(500).json({ message: "Ошибка при записи на курс" });
-    }
-  });
-
+  // Enrollments API
   app.get("/api/enrollments/my", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Необходима авторизация" });
@@ -162,94 +70,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const enrollments = await storage.getEnrollmentsByUser(req.user.id);
-      
-      // Get the course details for each enrollment
-      const enrollmentsWithCourses = await Promise.all(
-        enrollments.map(async (enrollment) => {
-          const course = await storage.getCourse(enrollment.courseId);
-          return { ...enrollment, course };
-        })
-      );
-      
-      res.json(enrollmentsWithCourses);
+      res.json(enrollments);
     } catch (error) {
-      res.status(500).json({ message: "Ошибка при получении записей на курсы" });
+      res.status(500).json({ message: "Ошибка загрузки записей на курсы" });
     }
   });
 
-  app.get("/api/courses/:courseId/enrollments", async (req, res) => {
+  app.post("/api/enrollments", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Необходима авторизация" });
     }
 
-    if (req.user?.role !== "teacher") {
-      return res.status(403).json({ message: "Только преподаватели могут просматривать записи на курс" });
-    }
-
-    const courseId = parseInt(req.params.courseId);
-    const course = await storage.getCourse(courseId);
-    
-    if (!course) {
-      return res.status(404).json({ message: "Курс не найден" });
-    }
-
-    if (course.teacherId !== req.user.id) {
-      return res.status(403).json({ message: "Вы можете просматривать только свои курсы" });
-    }
-
     try {
-      const enrollments = await storage.getEnrollmentsByCourse(courseId);
+      const enrollmentData = insertEnrollmentSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
       
-      // Get the user details for each enrollment
-      const enrollmentsWithUsers = await Promise.all(
-        enrollments.map(async (enrollment) => {
-          const user = await storage.getUser(enrollment.userId);
-          // Remove password from user object
-          if (user) {
-            const { password, ...userWithoutPassword } = user;
-            return { ...enrollment, user: userWithoutPassword };
-          }
-          return enrollment;
-        })
+      // Проверка существования курса
+      const course = await storage.getCourse(enrollmentData.courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+      
+      // Проверка на дублирование записи
+      const existingEnrollment = await storage.getEnrollmentByUserAndCourse(
+        req.user.id, 
+        enrollmentData.courseId
       );
       
-      res.json(enrollmentsWithUsers);
+      if (existingEnrollment) {
+        return res.status(400).json({ message: "Вы уже записаны на этот курс" });
+      }
+      
+      const enrollment = await storage.createEnrollment({
+        ...enrollmentData,
+        progress: enrollmentData.progress || 0,
+        enrollmentDate: enrollmentData.enrollmentDate || new Date(),
+        grade: null
+      });
+      
+      res.status(201).json(enrollment);
     } catch (error) {
-      res.status(500).json({ message: "Ошибка при получении записей на курс" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Неверные данные записи", errors: error.errors });
+      }
+      res.status(500).json({ message: "Ошибка при записи на курс" });
     }
   });
-
-  app.put("/api/enrollments/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-
-    if (req.user?.role !== "teacher") {
-      return res.status(403).json({ message: "Только преподаватели могут обновлять прогресс и оценки" });
-    }
-
-    const enrollmentId = parseInt(req.params.id);
-    const enrollment = await storage.getEnrollment(enrollmentId);
-    
-    if (!enrollment) {
-      return res.status(404).json({ message: "Запись не найдена" });
-    }
-
-    // Verify the teacher owns the course
-    const course = await storage.getCourse(enrollment.courseId);
-    if (!course || course.teacherId !== req.user.id) {
-      return res.status(403).json({ message: "Вы можете обновлять только записи своих курсов" });
-    }
-
-    try {
-      const updatedEnrollment = await storage.updateEnrollment(enrollmentId, req.body);
-      res.json(updatedEnrollment);
-    } catch (error) {
-      res.status(500).json({ message: "Ошибка при обновлении записи" });
-    }
-  });
-
+  
   // Materials API
+  app.get("/api/courses/:id/materials", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+
+    try {
+      const courseId = parseInt(req.params.id);
+      
+      // Проверка существования курса
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+      
+      // Если пользователь - преподаватель курса или студент, записанный на курс
+      if (req.user?.role === "teacher" && req.user.id === course.teacherId) {
+        const materials = await storage.getMaterialsByCourse(courseId);
+        return res.json(materials);
+      }
+      
+      if (req.user?.role === "student") {
+        const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
+        if (enrollment) {
+          const materials = await storage.getMaterialsByCourse(courseId);
+          return res.json(materials);
+        }
+      }
+      
+      return res.status(403).json({ message: "У вас нет доступа к материалам этого курса" });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка загрузки материалов" });
+    }
+  });
+
   app.post("/api/materials", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Необходима авторизация" });
@@ -260,57 +164,185 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const validatedData = insertMaterialSchema.parse(req.body);
+      const materialData = insertMaterialSchema.parse(req.body);
       
-      // Verify the teacher owns the course
-      const course = await storage.getCourse(validatedData.courseId);
-      if (!course || course.teacherId !== req.user.id) {
-        return res.status(403).json({ message: "Вы можете добавлять материалы только к своим курсам" });
+      // Проверка существования курса
+      const course = await storage.getCourse(materialData.courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
       }
-
-      const material = await storage.createMaterial(validatedData);
+      
+      // Проверка, является ли пользователь преподавателем этого курса
+      if (req.user.id !== course.teacherId) {
+        return res.status(403).json({ message: "Вы не являетесь преподавателем этого курса" });
+      }
+      
+      const material = await storage.createMaterial({
+        ...materialData,
+        order: materialData.order || 0,
+        description: materialData.description || null
+      });
+      
       res.status(201).json(material);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
+        return res.status(400).json({ message: "Неверные данные материала", errors: error.errors });
       }
-      res.status(500).json({ message: "Ошибка при создании материала" });
+      res.status(500).json({ message: "Ошибка при добавлении материала" });
+    }
+  });
+  
+  // Course Feedback API
+  app.get("/api/courses/:id/feedback", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      
+      // Проверка существования курса
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+      
+      const feedback = await storage.getCourseFeedbacksByCourse(courseId);
+      res.json(feedback);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка загрузки отзывов" });
     }
   });
 
-  app.get("/api/courses/:courseId/materials", async (req, res) => {
+  app.post("/api/feedback", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Необходима авторизация" });
     }
 
-    const courseId = parseInt(req.params.courseId);
-    const course = await storage.getCourse(courseId);
-    
-    if (!course) {
-      return res.status(404).json({ message: "Курс не найден" });
-    }
-
-    // If user is a student, check if they're enrolled
-    if (req.user.role === "student") {
-      const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
-      if (!enrollment) {
-        return res.status(403).json({ message: "Вы не записаны на этот курс" });
-      }
-    }
-    // If user is a teacher, check if they own the course
-    else if (req.user.role === "teacher" && course.teacherId !== req.user.id) {
-      return res.status(403).json({ message: "Вы можете просматривать материалы только своих курсов" });
+    if (req.user?.role !== "student") {
+      return res.status(403).json({ message: "Только студенты могут оставлять отзывы" });
     }
 
     try {
-      const materials = await storage.getMaterialsByCourse(courseId);
-      res.json(materials);
+      const feedbackData = insertCourseFeedbackSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      // Проверка существования курса
+      const course = await storage.getCourse(feedbackData.courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+      
+      // Проверка, записан ли студент на курс
+      const enrollment = await storage.getEnrollmentByUserAndCourse(
+        req.user.id, 
+        feedbackData.courseId
+      );
+      
+      if (!enrollment) {
+        return res.status(403).json({ message: "Вы не записаны на этот курс" });
+      }
+      
+      // Проверка, оставлял ли студент уже отзыв
+      const existingFeedback = await storage.getCourseFeedbacksByUser(req.user.id);
+      const alreadyFeedback = existingFeedback.find(f => f.courseId === feedbackData.courseId);
+      
+      if (alreadyFeedback) {
+        // Обновить существующий отзыв
+        const updatedFeedback = await storage.updateCourseFeedback(alreadyFeedback.id, {
+          content: feedbackData.content,
+          rating: feedbackData.rating || null
+        });
+        return res.json(updatedFeedback);
+      }
+      
+      // Создать новый отзыв
+      const feedback = await storage.createCourseFeedback({
+        ...feedbackData,
+        rating: feedbackData.rating || null,
+        createdAt: new Date()
+      });
+      
+      res.status(201).json(feedback);
     } catch (error) {
-      res.status(500).json({ message: "Ошибка при получении материалов" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Неверные данные отзыва", errors: error.errors });
+      }
+      res.status(500).json({ message: "Ошибка при добавлении отзыва" });
+    }
+  });
+  
+  // Assignments API
+  app.get("/api/assignments", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+
+    try {
+      const courseId = req.query.courseId ? parseInt(req.query.courseId as string) : null;
+      
+      if (courseId) {
+        // Проверка существования курса
+        const course = await storage.getCourse(courseId);
+        if (!course) {
+          return res.status(404).json({ message: "Курс не найден" });
+        }
+        
+        // Если пользователь - преподаватель курса или студент, записанный на курс
+        if (req.user?.role === "teacher" && req.user.id === course.teacherId) {
+          const assignments = await storage.getAssignmentsByCourse(courseId);
+          return res.json(assignments);
+        }
+        
+        if (req.user?.role === "student") {
+          const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
+          if (enrollment) {
+            const assignments = await storage.getAssignmentsByCourse(courseId);
+            return res.json(assignments);
+          }
+        }
+        
+        return res.status(403).json({ message: "У вас нет доступа к заданиям этого курса" });
+      } else {
+        return res.status(400).json({ message: "Укажите ID курса" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка загрузки заданий" });
+    }
+  });
+  
+  app.get("/api/courses/:id/assignments", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+
+    try {
+      const courseId = parseInt(req.params.id);
+      
+      // Проверка существования курса
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+      
+      // Если пользователь - преподаватель курса или студент, записанный на курс
+      if (req.user?.role === "teacher" && req.user.id === course.teacherId) {
+        const assignments = await storage.getAssignmentsByCourse(courseId);
+        return res.json(assignments);
+      }
+      
+      if (req.user?.role === "student") {
+        const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
+        if (enrollment) {
+          const assignments = await storage.getAssignmentsByCourse(courseId);
+          return res.json(assignments);
+        }
+      }
+      
+      return res.status(403).json({ message: "У вас нет доступа к заданиям этого курса" });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка загрузки заданий" });
     }
   });
 
-  // Assignments API
   app.post("/api/assignments", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Необходима авторизация" });
@@ -321,79 +353,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const validatedData = insertAssignmentSchema.parse(req.body);
+      const assignmentData = insertAssignmentSchema.parse(req.body);
       
-      // Verify the teacher owns the course
-      const course = await storage.getCourse(validatedData.courseId);
-      if (!course || course.teacherId !== req.user.id) {
-        return res.status(403).json({ message: "Вы можете создавать задания только для своих курсов" });
+      // Проверка существования курса
+      const course = await storage.getCourse(assignmentData.courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
       }
-
-      const assignment = await storage.createAssignment(validatedData);
+      
+      // Проверка, является ли пользователь преподавателем этого курса
+      if (req.user.id !== course.teacherId) {
+        return res.status(403).json({ message: "Вы не являетесь преподавателем этого курса" });
+      }
+      
+      const assignment = await storage.createAssignment({
+        ...assignmentData,
+        createdAt: new Date()
+      });
+      
       res.status(201).json(assignment);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
+        return res.status(400).json({ message: "Неверные данные задания", errors: error.errors });
       }
       res.status(500).json({ message: "Ошибка при создании задания" });
     }
   });
-
-  app.get("/api/courses/:courseId/assignments", async (req, res) => {
+  
+  // Submissions API
+  app.get("/api/submissions", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Необходима авторизация" });
     }
 
-    const courseId = parseInt(req.params.courseId);
-    const course = await storage.getCourse(courseId);
-    
-    if (!course) {
-      return res.status(404).json({ message: "Курс не найден" });
-    }
-
-    // If user is a student, check if they're enrolled
-    if (req.user.role === "student") {
-      const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
-      if (!enrollment) {
-        return res.status(403).json({ message: "Вы не записаны на этот курс" });
-      }
-    }
-    // If user is a teacher, check if they own the course
-    else if (req.user.role === "teacher" && course.teacherId !== req.user.id) {
-      return res.status(403).json({ message: "Вы можете просматривать задания только своих курсов" });
-    }
-
     try {
-      const assignments = await storage.getAssignmentsByCourse(courseId);
-      res.json(assignments);
+      const assignmentId = req.query.assignmentId ? parseInt(req.query.assignmentId as string) : null;
+      
+      if (assignmentId) {
+        // Проверка существования задания
+        const assignment = await storage.getAssignment(assignmentId);
+        if (!assignment) {
+          return res.status(404).json({ message: "Задание не найдено" });
+        }
+        
+        // Проверка, является ли пользователь преподавателем этого курса
+        const course = await storage.getCourse(assignment.courseId);
+        if (!course) {
+          return res.status(404).json({ message: "Курс не найден" });
+        }
+        
+        if (req.user?.role === "teacher" && req.user.id === course.teacherId) {
+          const submissions = await storage.getSubmissionsByAssignment(assignmentId);
+          return res.json(submissions);
+        }
+        
+        // Студент может видеть только свои работы
+        if (req.user?.role === "student") {
+          const submissions = await storage.getSubmissionsByAssignment(assignmentId);
+          const userSubmissions = submissions.filter(sub => sub.userId === req.user?.id);
+          return res.json(userSubmissions);
+        }
+        
+        return res.status(403).json({ message: "У вас нет доступа к работам по этому заданию" });
+      } else {
+        return res.status(400).json({ message: "Укажите ID задания" });
+      }
     } catch (error) {
-      res.status(500).json({ message: "Ошибка при получении заданий" });
+      res.status(500).json({ message: "Ошибка загрузки работ" });
     }
   });
 
-  // Submissions API
   app.post("/api/submissions", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Необходима авторизация" });
     }
 
     if (req.user?.role !== "student") {
-      return res.status(403).json({ message: "Только студенты могут отправлять ответы на задания" });
+      return res.status(403).json({ message: "Только студенты могут отправлять работы" });
     }
 
     try {
-      const validatedData = insertSubmissionSchema.parse({
+      const submissionData = insertSubmissionSchema.parse({
         ...req.body,
         userId: req.user.id
       });
       
-      // Check if the assignment exists
-      const assignment = await storage.getAssignment(validatedData.assignmentId);
+      // Проверка существования задания
+      const assignment = await storage.getAssignment(submissionData.assignmentId);
       if (!assignment) {
         return res.status(404).json({ message: "Задание не найдено" });
       }
       
-      // Check if the student is enrolled in the course
+      // Проверка, записан ли студент на курс
       const enrollment = await storage.getEnrollmentByUserAndCourse(
         req.user.id, 
         assignment.courseId
@@ -402,122 +453,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!enrollment) {
         return res.status(403).json({ message: "Вы не записаны на этот курс" });
       }
-
-      const submission = await storage.createSubmission(validatedData);
+      
+      // Проверка, не просрочена ли сдача задания
+      const currentDate = new Date();
+      const dueDate = new Date(assignment.dueDate);
+      
+      if (currentDate > dueDate) {
+        return res.status(400).json({ message: "Срок сдачи задания истек" });
+      }
+      
+      // Проверка, не сдавал ли студент уже работу по этому заданию
+      const submissions = await storage.getSubmissionsByAssignment(assignment.id);
+      const existingSubmission = submissions.find(sub => sub.userId === req.user?.id);
+      
+      if (existingSubmission) {
+        // Обновить существующую работу
+        const updatedSubmission = await storage.updateSubmission(existingSubmission.id, {
+          content: submissionData.content,
+          submitted: new Date()
+        });
+        return res.json(updatedSubmission);
+      }
+      
+      // Создать новую работу
+      const submission = await storage.createSubmission({
+        ...submissionData,
+        submitted: new Date(),
+        grade: null,
+        feedback: null
+      });
+      
       res.status(201).json(submission);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
+        return res.status(400).json({ message: "Неверные данные работы", errors: error.errors });
       }
-      res.status(500).json({ message: "Ошибка при отправке ответа" });
+      res.status(500).json({ message: "Ошибка при отправке работы" });
     }
   });
 
-  app.get("/api/assignments/:assignmentId/submissions", async (req, res) => {
+  app.patch("/api/submissions/:id", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Необходима авторизация" });
     }
 
-    const assignmentId = parseInt(req.params.assignmentId);
-    const assignment = await storage.getAssignment(assignmentId);
-    
-    if (!assignment) {
-      return res.status(404).json({ message: "Задание не найдено" });
+    if (req.user?.role !== "teacher") {
+      return res.status(403).json({ message: "Только преподаватели могут оценивать работы" });
     }
 
-    // Only teachers who own the course can view all submissions
-    if (req.user.role === "teacher") {
-      const course = await storage.getCourse(assignment.courseId);
-      if (!course || course.teacherId !== req.user.id) {
-        return res.status(403).json({ message: "Вы можете просматривать ответы только для своих курсов" });
+    try {
+      const submissionId = parseInt(req.params.id);
+      
+      // Проверка существования работы
+      const submission = await storage.getSubmission(submissionId);
+      if (!submission) {
+        return res.status(404).json({ message: "Работа не найдена" });
       }
       
-      try {
-        const submissions = await storage.getSubmissionsByAssignment(assignmentId);
-        
-        // Get the user details for each submission
-        const submissionsWithUsers = await Promise.all(
-          submissions.map(async (submission) => {
-            const user = await storage.getUser(submission.userId);
-            // Remove password from user object
-            if (user) {
-              const { password, ...userWithoutPassword } = user;
-              return { ...submission, user: userWithoutPassword };
-            }
-            return submission;
-          })
-        );
-        
-        res.json(submissionsWithUsers);
-      } catch (error) {
-        res.status(500).json({ message: "Ошибка при получении ответов" });
-      }
-    } 
-    // Students can only view their own submissions
-    else if (req.user.role === "student") {
-      try {
-        const submissions = await storage.getSubmissionsByAssignment(assignmentId);
-        const userSubmissions = submissions.filter(sub => sub.userId === req.user.id);
-        res.json(userSubmissions);
-      } catch (error) {
-        res.status(500).json({ message: "Ошибка при получении ответов" });
-      }
-    } else {
-      return res.status(403).json({ message: "Доступ запрещен" });
-    }
-  });
-
-  app.put("/api/submissions/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-
-    const submissionId = parseInt(req.params.id);
-    const submission = await storage.getSubmission(submissionId);
-    
-    if (!submission) {
-      return res.status(404).json({ message: "Ответ не найден" });
-    }
-
-    // Teachers can update grades and feedback
-    if (req.user.role === "teacher") {
+      // Проверка, принадлежит ли задание курсу преподавателя
       const assignment = await storage.getAssignment(submission.assignmentId);
       if (!assignment) {
         return res.status(404).json({ message: "Задание не найдено" });
       }
       
       const course = await storage.getCourse(assignment.courseId);
-      if (!course || course.teacherId !== req.user.id) {
-        return res.status(403).json({ message: "Вы можете оценивать ответы только для своих курсов" });
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
       }
       
-      try {
-        const updatedSubmission = await storage.updateSubmission(submissionId, {
-          grade: req.body.grade,
-          feedback: req.body.feedback
-        });
-        res.json(updatedSubmission);
-      } catch (error) {
-        res.status(500).json({ message: "Ошибка при обновлении ответа" });
-      }
-    }
-    // Students can only update their own submissions before it's graded
-    else if (req.user.role === "student" && submission.userId === req.user.id) {
-      if (submission.grade !== null) {
-        return res.status(403).json({ message: "Невозможно изменить оцененный ответ" });
+      if (req.user.id !== course.teacherId) {
+        return res.status(403).json({ message: "Вы не являетесь преподавателем этого курса" });
       }
       
-      try {
-        const updatedSubmission = await storage.updateSubmission(submissionId, {
-          content: req.body.content,
-          submitted: new Date()
-        });
-        res.json(updatedSubmission);
-      } catch (error) {
-        res.status(500).json({ message: "Ошибка при обновлении ответа" });
+      // Валидация данных оценки
+      const { grade, feedback } = req.body;
+      
+      if (typeof grade !== "number" || grade < 0 || grade > 100) {
+        return res.status(400).json({ message: "Оценка должна быть числом от 0 до 100" });
       }
-    } else {
-      return res.status(403).json({ message: "Доступ запрещен" });
+      
+      const updatedSubmission = await storage.updateSubmission(submissionId, {
+        grade,
+        feedback: feedback || null
+      });
+      
+      res.json(updatedSubmission);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка при оценке работы" });
     }
   });
 
@@ -598,292 +620,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
       
-      // Get upcoming assignments
-      const courseIds = enrollments.map(e => e.courseId);
-      let upcomingAssignments: Assignment[] = [];
+      // Get all assignments and submissions
+      let completedAssignments = 0;
+      let totalAssignments = 0;
       
-      for (const courseId of courseIds) {
-        const assignments = await storage.getAssignmentsByCourse(courseId);
-        // Filter for assignments due in the future
-        const upcoming = assignments.filter(a => a.dueDate > new Date());
-        upcomingAssignments = [...upcomingAssignments, ...upcoming];
+      for (const enrollment of enrollments) {
+        const assignments = await storage.getAssignmentsByCourse(enrollment.courseId);
+        totalAssignments += assignments.length;
+        
+        for (const assignment of assignments) {
+          const submissions = await storage.getSubmissionsByAssignment(assignment.id);
+          const userSubmission = submissions.find(sub => sub.userId === req.user?.id);
+          if (userSubmission) {
+            completedAssignments += 1;
+          }
+        }
       }
       
-      // Sort assignments by due date
-      upcomingAssignments.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
-      
-      // Get course information for assignments
-      const assignmentsWithCourses = await Promise.all(
-        upcomingAssignments.map(async (assignment) => {
-          const course = await storage.getCourse(assignment.courseId);
-          return {
-            ...assignment,
-            course
-          };
-        })
-      );
-      
       res.json({
-        completedCourses: courseData.filter(e => e.progress === 100).length,
-        inProgressCourses: courseData.filter(e => e.progress > 0 && e.progress < 100).length,
-        averageGrade: courseData.filter(e => e.grade !== null)
-          .reduce((sum, e) => sum + (e.grade || 0), 0) / 
-          (courseData.filter(e => e.grade !== null).length || 1),
-        enrolledCourses: courseData,
-        upcomingAssignments: assignmentsWithCourses.slice(0, 5)  // Return only 5 closest assignments
+        enrolledCourses: enrollments.length,
+        courseData,
+        completedAssignments,
+        totalAssignments
       });
     } catch (error) {
       res.status(500).json({ message: "Ошибка при получении статистики" });
-    }
-  });
-
-  // API для отзывов о курсах
-  app.get("/api/courses/:courseId/feedbacks", async (req, res) => {
-    try {
-      const courseId = parseInt(req.params.courseId);
-      if (isNaN(courseId)) {
-        return res.status(400).json({ message: "Некорректный ID курса" });
-      }
-      
-      const course = await storage.getCourse(courseId);
-      if (!course) {
-        return res.status(404).json({ message: "Курс не найден" });
-      }
-      
-      const feedbacks = await storage.getCourseFeedbacksByCourse(courseId);
-      
-      // Получаем информацию о пользователях
-      const feedbacksWithUsers = await Promise.all(
-        feedbacks.map(async (feedback) => {
-          const user = await storage.getUser(feedback.userId);
-          if (user) {
-            const { password, ...userWithoutPassword } = user;
-            return {
-              ...feedback,
-              user: userWithoutPassword
-            };
-          }
-          return feedback;
-        })
-      );
-      
-      res.json(feedbacksWithUsers);
-    } catch (error) {
-      console.error("Ошибка при получении отзывов:", error);
-      res.status(500).json({ message: "Ошибка при получении отзывов" });
-    }
-  });
-
-  app.post("/api/courses/:courseId/feedbacks", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-    
-    try {
-      const courseId = parseInt(req.params.courseId);
-      if (isNaN(courseId)) {
-        return res.status(400).json({ message: "Некорректный ID курса" });
-      }
-      
-      const course = await storage.getCourse(courseId);
-      if (!course) {
-        return res.status(404).json({ message: "Курс не найден" });
-      }
-      
-      // Проверяем, является ли пользователь студентом, записанным на курс
-      if (req.user.role === "student") {
-        const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
-        if (!enrollment) {
-          return res.status(403).json({ message: "Вы должны быть записаны на курс, чтобы оставить отзыв" });
-        }
-      }
-      
-      const validatedData = insertCourseFeedbackSchema.parse({
-        courseId,
-        userId: req.user.id,
-        content: req.body.content,
-        rating: req.body.rating,
-        createdAt: new Date()
-      });
-      
-      const feedback = await storage.createCourseFeedback(validatedData);
-      
-      // Добавляем информацию о пользователе к ответу
-      const { password, ...userWithoutPassword } = req.user;
-      
-      res.status(201).json({
-        ...feedback,
-        user: userWithoutPassword
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
-      }
-      console.error("Ошибка при создании отзыва:", error);
-      res.status(500).json({ message: "Ошибка при создании отзыва" });
-    }
-  });
-
-  // API для получения отзыва пользователя о конкретном курсе
-  app.get("/api/courses/:courseId/feedbacks/my", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-    
-    try {
-      const courseId = parseInt(req.params.courseId);
-      if (isNaN(courseId)) {
-        return res.status(400).json({ message: "Некорректный ID курса" });
-      }
-      
-      // Ищем отзыв пользователя для данного курса
-      const userFeedbacks = await storage.getCourseFeedbacksByUser(req.user.id);
-      const courseFeedback = userFeedbacks.find(feedback => feedback.courseId === courseId);
-      
-      if (!courseFeedback) {
-        return res.status(404).json({ message: "Отзыв не найден" });
-      }
-      
-      res.json(courseFeedback);
-    } catch (error) {
-      console.error("Ошибка при получении отзыва:", error);
-      res.status(500).json({ message: "Ошибка при получении отзыва" });
-    }
-  });
-
-  // Обновление отзыва о курсе
-  app.patch("/api/feedbacks/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-    
-    try {
-      const feedbackId = parseInt(req.params.id);
-      if (isNaN(feedbackId)) {
-        return res.status(400).json({ message: "Некорректный ID отзыва" });
-      }
-      
-      // Проверяем, существует ли отзыв
-      const feedback = await storage.getCourseFeedback(feedbackId);
-      if (!feedback) {
-        return res.status(404).json({ message: "Отзыв не найден" });
-      }
-      
-      // Проверяем права доступа (только автор может обновлять свой отзыв)
-      if (feedback.userId !== req.user.id) {
-        return res.status(403).json({ message: "Вы можете обновлять только свои отзывы" });
-      }
-      
-      // Валидация данных для обновления
-      const updateData = {
-        content: req.body.content,
-        rating: req.body.rating
-      };
-      
-      // Обновляем отзыв
-      const updatedFeedback = await storage.updateCourseFeedback(feedbackId, updateData);
-      
-      res.json(updatedFeedback);
-    } catch (error) {
-      console.error("Ошибка при обновлении отзыва:", error);
-      res.status(500).json({ message: "Ошибка при обновлении отзыва" });
-    }
-  });
-
-  // API для создания отзыва
-  app.post("/api/feedbacks", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-    
-    try {
-      const courseId = req.body.courseId;
-      if (!courseId) {
-        return res.status(400).json({ message: "ID курса обязателен" });
-      }
-      
-      const course = await storage.getCourse(courseId);
-      if (!course) {
-        return res.status(404).json({ message: "Курс не найден" });
-      }
-      
-      // Проверяем, является ли пользователь студентом, записанным на курс
-      if (req.user.role === "student") {
-        const enrollment = await storage.getEnrollmentByUserAndCourse(req.user.id, courseId);
-        if (!enrollment) {
-          return res.status(403).json({ message: "Вы должны быть записаны на курс, чтобы оставить отзыв" });
-        }
-      }
-      
-      // Проверяем, есть ли уже отзыв от этого пользователя для данного курса
-      const userFeedbacks = await storage.getCourseFeedbacksByUser(req.user.id);
-      const existingFeedback = userFeedbacks.find(feedback => feedback.courseId === courseId);
-      
-      if (existingFeedback) {
-        return res.status(400).json({ 
-          message: "Вы уже оставили отзыв для этого курса. Используйте PATCH для обновления." 
-        });
-      }
-      
-      const validatedData = insertCourseFeedbackSchema.parse({
-        courseId,
-        userId: req.user.id,
-        content: req.body.content,
-        rating: req.body.rating,
-        createdAt: new Date()
-      });
-      
-      const feedback = await storage.createCourseFeedback(validatedData);
-      
-      // Добавляем информацию о пользователе к ответу
-      const { password, ...userWithoutPassword } = req.user;
-      
-      res.status(201).json({
-        ...feedback,
-        user: userWithoutPassword
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
-      }
-      console.error("Ошибка при создании отзыва:", error);
-      res.status(500).json({ message: "Ошибка при создании отзыва" });
-    }
-  });
-
-  app.delete("/api/feedbacks/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Необходима авторизация" });
-    }
-    
-    try {
-      const feedbackId = parseInt(req.params.id);
-      if (isNaN(feedbackId)) {
-        return res.status(400).json({ message: "Некорректный ID отзыва" });
-      }
-      
-      const feedback = await storage.getCourseFeedback(feedbackId);
-      if (!feedback) {
-        return res.status(404).json({ message: "Отзыв не найден" });
-      }
-      
-      // Проверка прав: пользователь может удалить только свой отзыв, преподаватель - отзыв к своему курсу
-      if (feedback.userId !== req.user.id) {
-        if (req.user.role === "teacher") {
-          const course = await storage.getCourse(feedback.courseId);
-          if (!course || course.teacherId !== req.user.id) {
-            return res.status(403).json({ message: "У вас нет прав для удаления этого отзыва" });
-          }
-        } else {
-          return res.status(403).json({ message: "У вас нет прав для удаления этого отзыва" });
-        }
-      }
-      
-      await storage.deleteCourseFeedback(feedbackId);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Ошибка при удалении отзыва:", error);
-      res.status(500).json({ message: "Ошибка при удалении отзыва" });
     }
   });
 

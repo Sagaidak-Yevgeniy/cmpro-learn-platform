@@ -23,6 +23,7 @@ function Router() {
           <Route path="/courses/:id" component={CourseDetailsPage} />
           <ProtectedRoute path="/my-courses" component={MyCoursesPage} />
           <ProtectedRoute path="/teacher" component={TeacherDashboard} />
+          <ProtectedRoute path="/teacher/courses/:id" component={TeacherDashboard} />
           <Route component={NotFound} />
         </Switch>
       </div>
