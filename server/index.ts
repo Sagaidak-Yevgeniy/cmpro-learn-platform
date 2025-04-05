@@ -1,4 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -53,6 +55,8 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
+    const staticPath = path.join(__dirname, 'public'); // Assumes static files are in 'public' directory
+    app.use(express.static(staticPath)); //Serve static files
     serveStatic(app);
   }
 
