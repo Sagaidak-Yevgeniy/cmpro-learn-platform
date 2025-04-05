@@ -28,7 +28,7 @@ export default function Header() {
   useEffect(() => {
     if (!user) return;
 
-    const ws = new WebSocket(`ws://${window.location.host}/ws/notifications`);
+    const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/notifications`);
 
     ws.onmessage = (event) => {
       const notification = JSON.parse(event.data);
