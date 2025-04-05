@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import CourseFeedback from "@/components/courses/course-feedback";
+import CourseChat from "@/components/chat/course-chat";
 
 export default function CourseDetailsPage() {
   const { id } = useParams();
@@ -181,6 +182,7 @@ export default function CourseDetailsPage() {
               <>
                 <TabsTrigger value="materials">Материалы</TabsTrigger>
                 <TabsTrigger value="assignments">Задания</TabsTrigger>
+                <TabsTrigger value="chat">Чат</TabsTrigger>
               </>
             )}
           </TabsList>
@@ -296,6 +298,15 @@ export default function CourseDetailsPage() {
 
           <TabsContent value="feedback" className="space-y-6">
             <CourseFeedback courseId={courseId} isEnrolled={isEnrolled} />
+          </TabsContent>
+
+          <TabsContent value="chat" className="space-y-6">
+            {(isEnrolled || isCourseOwner) && (
+              <>
+                <h2 className="text-xl font-bold mb-3">Чат курса</h2>
+                <CourseChat courseId={courseId} />
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </div>

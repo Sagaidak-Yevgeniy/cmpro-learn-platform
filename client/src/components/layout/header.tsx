@@ -151,7 +151,7 @@ export default function Header() {
                           <Avatar>
                             <AvatarImage src={user.avatar || ""} alt={user.name} />
                             <AvatarFallback className="bg-primary text-white">
-                              {user.name.substring(0, 2).toUpperCase()}
+                              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         </div>
