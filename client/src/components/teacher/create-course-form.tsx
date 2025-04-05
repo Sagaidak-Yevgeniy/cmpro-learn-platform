@@ -83,10 +83,15 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
   // Мутация для создания курса
   const createCourseMutation = useMutation({
     mutationFn: async (data: CreateCourseFormValues) => {
-      const res = await apiRequest("POST", "/api/courses", {
+      // Преобразуем даты в строку ISO для корректной передачи на сервер
+      const formattedData = {
         ...data,
+        startDate: data.startDate.toISOString(),
+        endDate: data.endDate.toISOString(),
         teacherId: user?.id,
-      });
+      };
+      
+      const res = await apiRequest("POST", "/api/courses", formattedData);
       return await res.json();
     },
     onSuccess: () => {

@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import CreateAssignmentForm from "./create-assignment-form";
+import CreateAssignmentForm from "../teacher/create-assignment-form";
 
 interface AssignmentsManagerProps {
   courseId: number;
@@ -154,7 +154,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
             </DialogDescription>
           </DialogHeader>
           {courseId && 
-            <CreateAssignmentForm courseId={courseId} onClose={handleCloseCreateDialog} />
+            <CreateAssignmentForm courseId={courseId} onSuccess={() => handleCloseCreateDialog(true)} />
           }
         </DialogContent>
       </Dialog>

@@ -57,10 +57,14 @@ export default function CreateAssignmentForm({ courseId, onSuccess }: CreateAssi
   // Мутация для создания задания
   const createAssignmentMutation = useMutation({
     mutationFn: async (data: CreateAssignmentFormValues) => {
-      const res = await apiRequest("POST", "/api/assignments", {
+      // Преобразуем дату в строку ISO для корректной передачи на сервер
+      const formattedData = {
         ...data,
+        dueDate: data.dueDate.toISOString(),
         courseId,
-      });
+      };
+      
+      const res = await apiRequest("POST", "/api/assignments", formattedData);
       return await res.json();
     },
     onSuccess: () => {
