@@ -33,6 +33,7 @@ export default function CourseDetailsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [createTestDialogOpen, setCreateTestDialogOpen] = useState(false);
+  const [selectedTest, setSelectedTest] = useState<number | null>(null);
 
   const { data: course, isLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
@@ -86,6 +87,48 @@ export default function CourseDetailsPage() {
       window.location.href = "/teacher";
     },
   });
+
+  const handleEditTest = (testId: number) => {
+    setSelectedTest(testId);
+    setCreateTestDialogOpen(true);
+  };
+
+  const handleDeleteTest = async (testId: number) => {
+    try {
+      const response = await apiRequest("DELETE", `/api/courses/${courseId}/tests/${testId}`);
+      if (!response.ok) throw new Error("Failed to delete test");
+      queryClient.invalidateQueries([`/api/courses/${courseId}`]);
+      toast({
+        title: "Успешно",
+        description: "Тест удален"
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить тест",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteMaterial = async (materialId: number) => {
+    try {
+      const response = await apiRequest("DELETE", `/api/courses/${courseId}/materials/${materialId}`);
+      if (!response.ok) throw new Error("Failed to delete material");
+      queryClient.invalidateQueries([`/api/courses/${courseId}`]);
+      toast({
+        title: "Успешно",
+        description: "Материал удален"
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить материал",
+        variant: "destructive"
+      });
+    }
+  };
+
 
   if (isLoading) {
     return <div>Загрузка...</div>;
@@ -362,7 +405,7 @@ export default function CourseDetailsPage() {
                         <h3 className="text-lg font-medium mb-4">Загрузка нового материала</h3>
                         <UploadMaterialForm courses={[course]} />
                       </div>
-                      
+
                       <div>
                         <h3 className="text-lg font-medium mb-4">Список материалов</h3>
                         {course.materials && course.materials.length > 0 ? (
@@ -649,7 +692,7 @@ export default function CourseDetailsPage() {
               Создайте тест для проверки знаний студентов
             </DialogDescription>
           </DialogHeader>
-          <TestConstructor courseId={courseId} />
+          <TestConstructor courseId={courseId} testId={selectedTest} />
         </DialogContent>
       </Dialog>
     </div>
