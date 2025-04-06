@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useSearch } from "wouter";
 import { Course } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
 import CourseList from "@/components/courses/course-list";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
