@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useSearch } from "wouter";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User, CheckCircle, Loader2, Trash2, UserPlus, UserMinus } from "lucide-react";
+import { Calendar, Clock, User, CheckCircle, Loader2, Trash2, UserPlus, UserMinus, Plus } from "lucide-react";
+import TestConstructor from "@/components/teacher/test-constructor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -33,6 +34,7 @@ export default function CourseDetailsPage() {
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  const [createTestDialogOpen, setCreateTestDialogOpen] = useState(false);
 
   const { data: course, isLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
@@ -348,21 +350,70 @@ export default function CourseDetailsPage() {
                 </TabsContent>
 
                 <TabsContent value="tests">
-                  <Card>
-                    <CardHeader>
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
                       <CardTitle>Тесты</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {course.tests && course.tests.length > 0 ? (
-                        <div className="space-y-4">
-                          {course.tests.map((test) => (
-                            <Card key={test.id}>
-                              <CardContent className="p-4">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <h3 className="font-medium">{test.title}</h3>
-                                    <p className="text-sm text-gray-500">{test.description}</p>
-                                  </div>
+                      <Button onClick={() => setCreateTestDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Создать тест
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {course.tests && course.tests.length > 0 ? (
+                      <div className="space-y-4">
+                        {course.tests.map((test) => (
+                          <Card key={test.id}>
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <h3 className="font-medium">{test.title}</h3>
+                                  <p className="text-sm text-gray-500">{test.description}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline"
+                                    onClick={() => handleEditTest(test.id)}
+                                  >
+                                    Редактировать
+                                  </Button>
+                                  <Button 
+                                    variant="destructive"
+                                    onClick={() => handleDeleteTest(test.id)}
+                                  >
+                                    Удалить
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Нет тестов
+                        </h3>
+                        <p className="text-gray-500 mb-4">
+                          Создайте первый тест для этого курса
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Dialog open={createTestDialogOpen} onOpenChange={setCreateTestDialogOpen}>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Создание теста</DialogTitle>
+                      <DialogDescription>
+                        Создайте тест для проверки знаний студентов
+                      </DialogDescription>
+                    </DialogHeader>
+                    <TestConstructor courseId={courseId} />
+                  </DialogContent>
+                </Dialog>
                                   <Button variant="outline">Начать тест</Button>
                                 </div>
                               </CardContent>
