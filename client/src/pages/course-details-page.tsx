@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useSearch } from "wouter";
 import { format } from "date-fns";
@@ -145,7 +144,7 @@ export default function CourseDetailsPage() {
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Отзывы студентов</CardTitle>
@@ -193,7 +192,7 @@ export default function CourseDetailsPage() {
                 Удалить курс
               </Button>
             </div>
-            
+
             <Tabs defaultValue="materials" className="space-y-6">
               <TabsList>
                 <TabsTrigger value="materials">Материалы</TabsTrigger>
