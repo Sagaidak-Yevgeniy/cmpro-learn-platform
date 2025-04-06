@@ -21,7 +21,7 @@ interface StudentStats {
 export default function MyCoursesPage() {
   const { user } = useAuth();
 
-  const { data: stats, refetch: refetchStats } = useQuery<StudentStats>({
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery<StudentStats>({
     queryKey: ["api/student/stats"],
     enabled: !!user && user.role === "student",
   });
