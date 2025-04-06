@@ -117,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      console.log("Тело запроса:", req.body);
+      console.log("Получены данные курса:", req.body);
 
       // Проверяем наличие обязательных полей и устанавливаем значения по умолчанию
       const requestData = {
@@ -127,11 +127,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: req.body.isActive !== undefined ? req.body.isActive : true
       };
 
-      console.log("Данные запроса после преобразования:", requestData);
+      console.log("Подготовленные данные курса:", requestData);
 
       // Расширяем схему, чтобы преобразовать строковые даты в объекты Date
       const courseSchemaWithDateConversion = insertCourseSchema.transform((data) => {
-        console.log("Трансформация данных:", data);
+        console.log("Преобразование дат курса:", data);
         return {
           ...data,
           startDate: data.startDate instanceof Date ? data.startDate : new Date(data.startDate),
@@ -140,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const courseData = courseSchemaWithDateConversion.parse(requestData);
-      console.log("Данные после валидации:", courseData);
+      console.log("Валидированные данные курса:", courseData);
 
       // Создаем курс
       const course = await storage.createCourse(courseData);
