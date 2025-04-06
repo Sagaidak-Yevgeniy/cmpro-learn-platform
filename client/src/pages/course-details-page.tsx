@@ -349,9 +349,9 @@ export default function CourseDetailsPage() {
                                     <h3 className="font-medium">{material.title}</h3>
                                     <p className="text-sm text-gray-500">{material.description}</p>
                                   </div>
-                                  <Button onClick={() => window.open(material.url, '_blank')}>
-                                    Открыть
-                                  </Button>
+                                  <a href={material.url} target="_blank" rel="noopener noreferrer">
+                                    <Button>Открыть материал</Button>
+                                  </a>
                                 </div>
                               </CardContent>
                             </Card>
