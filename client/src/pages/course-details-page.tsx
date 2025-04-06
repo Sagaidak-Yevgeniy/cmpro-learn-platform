@@ -60,6 +60,23 @@ export default function CourseDetailsPage() {
       </Button>
 
       <div className="grid gap-6 md:grid-cols-3">
+        {course.imageUrl && (
+          <div className="md:col-span-3 overflow-hidden rounded-xl h-[300px] relative">
+            <img 
+              src={`/uploads/${course.imageUrl}`}
+              alt={course.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder-course.jpg';
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <h1 className="text-3xl font-bold mb-2">{course.title}</h1>
+              <p className="text-lg text-white/90">{course.description}</p>
+            </div>
+          </div>
+        )}
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardHeader>
