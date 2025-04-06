@@ -32,19 +32,28 @@ const CourseCard = ({ course }: { course: Course }) => (
 export default function TeacherCourseList({ courses }: TeacherCourseListProps) {
   if (!courses || courses.length === 0) {
     return (
-      <div className="border-t border-gray-200 p-6 text-center">
-        <p className="text-gray-500">У вас пока нет курсов.</p>
-        <CreateCourseDialog />
+      <div className="flex flex-col items-center justify-center p-8 bg-muted/30 rounded-lg border-2 border-dashed">
+        <div className="text-center space-y-3">
+          <h3 className="text-xl font-medium">Начните создавать курсы</h3>
+          <p className="text-muted-foreground">Создайте свой первый курс и начните обучать студентов</p>
+          <CreateCourseDialog />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold mb-6">Мои курсы</h2>
+      <div className="flex justify-between items-center">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">Мои курсы</h2>
+          <p className="text-muted-foreground">Всего активных курсов: {courses.length}</p>
+        </div>
+        <CreateCourseDialog />
+      </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {courses.map((course) => (
-          <CourseCard key={course.id} course={course} />
+          <CourseCard key={course.id} course={course} isTeacher={true} />
         ))}
       </div>
     </div>

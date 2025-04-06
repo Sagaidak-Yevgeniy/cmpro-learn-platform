@@ -12,69 +12,76 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course, isTeacher }: CourseCardProps) {
-  // Map categories to colors
   const categoryColors: Record<string, string> = {
-    programming: "bg-blue-100 text-blue-800",
-    business: "bg-yellow-100 text-yellow-800",
-    science: "bg-green-100 text-green-800",
-    humanities: "bg-purple-100 text-purple-800",
+    programming: "bg-blue-500/10 text-blue-700 border-blue-200",
+    business: "bg-amber-500/10 text-amber-700 border-amber-200",
+    science: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+    humanities: "bg-purple-500/10 text-purple-700 border-purple-200",
   };
 
-  const categoryColor = categoryColors[course.category] || "bg-gray-100 text-gray-800";
+  const categoryColor = categoryColors[course.category] || "bg-slate-500/10 text-slate-700 border-slate-200";
+  const startDate = new Date(course.startDate);
+  const endDate = new Date(course.endDate);
+  const isActive = startDate <= new Date() && endDate >= new Date();
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-      <div className="h-40 bg-gray-200">
+    <Card className="group overflow-hidden bg-card hover:shadow-xl transition-all duration-300">
+      <div className="relative h-48">
         {course.imageUrl ? (
           <img 
             src={`/uploads/${course.imageUrl}`}
             alt={course.title} 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform group-hover:scale-105"
             onError={(e) => {
               e.currentTarget.src = '/placeholder-course.jpg';
             }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-primary to-blue-700 text-white text-xl font-bold p-4 text-center">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/90 to-primary text-white text-xl font-bold p-4 text-center">
             {course.title}
           </div>
         )}
+        <div className="absolute top-3 left-3 flex gap-2">
+          <Badge variant="secondary" className={`${categoryColor}`}>
+            {course.category}
+          </Badge>
+          {isActive && <Badge variant="success">Активный</Badge>}
+        </div>
       </div>
-      <CardContent className="p-4">
-        <Badge className={`${categoryColor} mb-2`}>
-          {course.category}
-        </Badge>
-        <h3 className="text-lg font-medium text-gray-900 mb-1">{course.title}</h3>
-        <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-          {course.description}
-        </p>
-        <div className="mt-3 flex items-center text-sm text-gray-500">
-          <Clock className="mr-1.5 h-5 w-5 text-gray-400" />
-          <span>{course.duration}</span>
+
+      <CardContent className="p-5 space-y-4">
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold tracking-tight line-clamp-1">{course.title}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
         </div>
-        <div className="mt-2 flex items-center text-sm text-gray-500">
-          <Calendar className="mr-1.5 h-5 w-5 text-gray-400" />
-          <span>
-            {format(new Date(course.startDate), 'dd.MM.yyyy')} - {format(new Date(course.endDate), 'dd.MM.yyyy')}
-          </span>
-        </div>
-        <div className="mt-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-white">
-              <User className="h-4 w-4" />
-            </div>
-            <span className="ml-2 text-xs text-gray-500">Преподаватель: {course.teacher?.name || "Не указан"}</span>
+
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span>{course.duration}</span>
           </div>
-          <div className="flex items-center"> {/*Added div for better spacing*/}
-            <Link href={`/courses/${course.id}`}>
-              <Button variant="outline" size="sm" className="text-primary border-primary hover:bg-primary/10 mr-2"> {/*Added margin right*/}
-                Подробнее
-              </Button>
-            </Link>
-            {isTeacher && (
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span>{course.studentCount || 0} студентов</span>
+          </div>
+        </div>
+
+        <div className="pt-4 flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-muted-foreground">
+              <Calendar className="inline h-4 w-4 mr-1" />
+              {format(startDate, 'dd.MM.yyyy')}
+            </div>
+            {isTeacher ? (
               <Link href={`/courses/${course.id}/manage`}>
-                <Button variant="default">
-                  Управление курсом
+                <Button size="sm" className="w-full">
+                  Управление
+                </Button>
+              </Link>
+            ) : (
+              <Link href={`/courses/${course.id}`}>
+                <Button variant="outline" size="sm">
+                  Подробнее
                 </Button>
               </Link>
             )}
