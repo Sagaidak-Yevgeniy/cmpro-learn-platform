@@ -50,72 +50,8 @@ export default function TeacherDashboard() {
   
   // Если открыта страница управления конкретным курсом
   if (courseId) {
-    const course = stats.courses.find(c => c.id === courseId);
-    
-    if (!course) {
-      return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">Курс не найден</h2>
-            <p className="mt-2 text-gray-600">Курс не существует или у вас нет к нему доступа</p>
-            <Button 
-              className="mt-4" 
-              onClick={() => window.location.href = "/teacher"}
-            >
-              Вернуться к списку курсов
-            </Button>
-          </div>
-        </div>
-      );
-    }
-    
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                onClick={() => window.location.href = "/teacher"}
-                className="mb-2"
-              >
-                &larr; Назад к панели
-              </Button>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">{course.title}</h1>
-            <p className="text-gray-600 mt-1">
-              Управление курсом | Студентов: {course.studentCount}
-            </p>
-          </div>
-        </div>
-        
-        <Tabs defaultValue="assignments" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="materials">Материалы</TabsTrigger>
-            <TabsTrigger value="assignments">Задания</TabsTrigger>
-            <TabsTrigger value="tests">Тесты</TabsTrigger>
-            <TabsTrigger value="students">Студенты</TabsTrigger>
-            <TabsTrigger value="info">Информация</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="assignments">
-            <AssignmentsManager courseId={courseId} />
-          </TabsContent>
-          
-          <TabsContent value="materials">
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6">
-                <h2 className="text-lg leading-6 font-medium text-gray-900">Материалы курса</h2>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">Управление учебными материалами</p>
-              </div>
-              <div className="border-t border-gray-200">
-                <UploadMaterialForm courses={[course]} />
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    );
+    window.location.href = `/course-management/${courseId}`;
+    return null;
   }
   
   // Стандартная панель управления преподавателя
