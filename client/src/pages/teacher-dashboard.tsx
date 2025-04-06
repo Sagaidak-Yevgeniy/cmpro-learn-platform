@@ -48,11 +48,7 @@ export default function TeacherDashboard() {
     );
   }
   
-  // Если открыта страница управления конкретным курсом
-  if (courseId) {
-    window.location.href = `/course-management/${courseId}`;
-    return null;
-  }
+  // Удаляем старую логику управления курсом, так как теперь используется прямая навигация
   
   // Стандартная панель управления преподавателя
   return (
