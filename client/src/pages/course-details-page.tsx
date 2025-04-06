@@ -245,6 +245,43 @@ export default function CourseDetailsPage() {
         {isEnrolled && materials && assignments && (
           <div className="mt-8 grid gap-6">
             <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Статус обучения</CardTitle>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Badge variant="success">Вы учитесь на этом курсе</Badge>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/enrollments/${courseId}`, {
+                          method: 'DELETE'
+                        });
+                        if (response.ok) {
+                          toast({
+                            title: "Успешно",
+                            description: "Вы покинули курс",
+                          });
+                          window.location.href = '/my-courses';
+                        }
+                      } catch (error) {
+                        toast({
+                          variant: "destructive",
+                          title: "Ошибка",
+                          description: "Не удалось покинуть курс",
+                        });
+                      }
+                    }}
+                  >
+                    Покинуть курс
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card>
               <CardHeader>
                 <CardTitle>Материалы курса</CardTitle>
               </CardHeader>
