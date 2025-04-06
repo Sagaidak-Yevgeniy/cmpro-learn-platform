@@ -114,7 +114,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Программирование</h3>
-              <p className="text-sm text-gray-600">43 курса</p>
+              <p className="text-sm text-gray-600">{courses?.filter(c => c.category === 'programming').length || 0} курсов</p>
             </Link>
 
             <Link href="/courses?category=business" className="bg-white rounded-lg shadow-md p-6 transform hover:scale-105 transition duration-300 cursor-pointer">
@@ -124,7 +124,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Бизнес и менеджмент</h3>
-              <p className="text-sm text-gray-600">35 курсов</p>
+              <p className="text-sm text-gray-600">{courses?.filter(c => c.category === 'business').length || 0} курсов</p>
             </Link>
 
             <Link href="/courses?category=science" className="bg-white rounded-lg shadow-md p-6 transform hover:scale-105 transition duration-300 cursor-pointer">
@@ -134,7 +134,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Наука и инженерия</h3>
-              <p className="text-sm text-gray-600">28 курсов</p>
+              <p className="text-sm text-gray-600">{courses?.filter(c => c.category === 'science').length || 0} курсов</p>
             </Link>
 
             <Link href="/courses?category=humanities" className="bg-white rounded-lg shadow-md p-6 transform hover:scale-105 transition duration-300 cursor-pointer">
@@ -144,7 +144,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Языки и гуманитарные науки</h3>
-              <p className="text-sm text-gray-600">32 курса</p>
+              <p className="text-sm text-gray-600">{courses?.filter(c => c.category === 'humanities').length || 0} курсов</p>
             </Link>
           </div>
         </div>
