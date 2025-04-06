@@ -60,10 +60,10 @@ export default function CourseDetailsPage() {
       </Button>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {course.imageUrl && (
+        {course.image_url && (
           <div className="md:col-span-3 overflow-hidden rounded-xl h-[300px] relative">
             <img 
-              src={`/uploads/${course.imageUrl}`}
+              src={`/uploads/${course.image_url}`}
               alt={course.title}
               className="w-full h-full object-cover"
               onError={(e) => {

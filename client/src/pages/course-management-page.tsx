@@ -719,10 +719,10 @@ export default function CourseManagementPage() {
                 <div>
                   <label className="text-sm font-medium">Изображение курса</label>
                   <div className="mt-2">
-                    {course.imageUrl ? (
+                    {course.image_url ? (
                       <div className="relative">
                         <img 
-                          src={course.imageUrl.startsWith('http') ? course.imageUrl : `/uploads/${course.imageUrl}`}
+                          src={course.image_url.startsWith('http') ? course.image_url : `/uploads/${course.imageUrl}`}
                           alt={course.title}
                           className="w-full h-40 object-cover rounded-md"
                           onError={(e) => {

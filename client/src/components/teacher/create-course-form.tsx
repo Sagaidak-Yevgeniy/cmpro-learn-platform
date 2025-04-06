@@ -347,7 +347,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
 
             <FormField
               control={form.control}
-              name="imageUrl"
+              name="image_url"
               render={({ field }) => (
                 <FormItem className="sm:col-span-6">
                   <FormLabel>Изображение курса</FormLabel>

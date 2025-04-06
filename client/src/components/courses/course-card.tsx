@@ -29,7 +29,7 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
       <div className="relative h-48">
         {course.imageUrl ? (
           <img 
-            src={course.imageUrl ? `/uploads/${course.imageUrl}` : '/placeholder-course.jpg'}
+            src={course.image_url ? `/uploads/${course.image_url}` : '/placeholder-course.jpg'}
             onError={(e) => {
               e.currentTarget.src = '/placeholder-course.jpg';
             }}
