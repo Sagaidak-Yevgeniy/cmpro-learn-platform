@@ -50,9 +50,14 @@ export default function CourseCard({ course, isTeacher, enrollment }: CourseCard
           </Badge>
           {isActive && <Badge variant="success">Активный</Badge>}
           {enrollment && (
-            <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 border-blue-200">
-              Прогресс: {enrollment.progress}%
-            </Badge>
+            <>
+              <Badge variant="success" className="bg-green-500/10 text-green-700 border-green-200">
+                Вы учитесь
+              </Badge>
+              <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 border-blue-200">
+                Прогресс: {enrollment.progress}%
+              </Badge>
+            </>
           )}
         </div>
       </div>
