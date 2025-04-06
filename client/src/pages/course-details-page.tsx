@@ -417,9 +417,6 @@ export default function CourseDetailsPage() {
                     </DialogContent>
                   </Dialog>
                 </TabsContent>
-                      ) : (
-                        <p className="text-gray-500">Тестов пока нет</p>
-                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
