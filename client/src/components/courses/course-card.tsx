@@ -62,7 +62,7 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-muted-foreground" />
-            <span>{course.enrollments?.length || 0} студентов</span>
+            <span>{course.studentCount || 0} студентов</span>
           </div>
         </div>
 
