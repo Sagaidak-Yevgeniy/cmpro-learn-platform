@@ -30,9 +30,6 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
         {course.imageUrl ? (
           <img 
             src={course.image_url ? `/uploads/${course.image_url}` : '/placeholder-course.jpg'}
-            onError={(e) => {
-              e.currentTarget.src = '/placeholder-course.jpg';
-            }}
             alt={course.title} 
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
             onError={(e) => {
