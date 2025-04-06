@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import CourseMaterialsPage from "@/pages/course-materials-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import CoursesPage from "@/pages/courses-page";
 import MyCoursesPage from "@/pages/my-courses-page";
@@ -24,6 +25,7 @@ function Router() {
         <Route path="/reset-password" component={ResetPasswordPage} />
           <Route path="/courses" component={CoursesPage} />
           <Route path="/courses/:id" component={CourseDetailsPage} />
+          <ProtectedRoute path="/courses/:id/materials" component={CourseMaterialsPage} />
           <ProtectedRoute path="/courses/:id/manage" component={CourseManagementPage} />
           <ProtectedRoute path="/my-courses" component={MyCoursesPage} />
           <ProtectedRoute path="/teacher" component={TeacherDashboard} />
