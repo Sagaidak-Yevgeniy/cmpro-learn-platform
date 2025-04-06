@@ -1,4 +1,3 @@
-
 -- Создание таблицы пользователей
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -20,7 +19,8 @@ CREATE TABLE IF NOT EXISTS courses (
   duration TEXT NOT NULL,
   start_date TIMESTAMP NOT NULL,
   end_date TIMESTAMP NOT NULL,
-  is_active BOOLEAN NOT NULL DEFAULT true
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  student_count INTEGER NOT NULL DEFAULT 0
 );
 
 -- Создание таблицы записей на курсы

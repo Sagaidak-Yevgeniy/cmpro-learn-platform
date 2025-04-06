@@ -31,6 +31,7 @@ export const courses = pgTable("courses", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   isActive: boolean("is_active").notNull().default(true),
+  studentCount: integer("student_count").notNull().default(0),
 });
 
 export const insertCourseSchema = createInsertSchema(courses, {
