@@ -416,11 +416,12 @@ export default function CourseDetailsPage() {
                       <TestConstructor courseId={courseId} />
                     </DialogContent>
                   </Dialog>
-                </TabsContent>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
             )}
           </Tabs>
         )}
