@@ -15,8 +15,8 @@ const CourseCard = ({ course }: { course: Course }) => (
     <p>Start Date: {format(new Date(course.startDate), 'dd.MM.yyyy')}</p>
     <p>End Date: {format(new Date(course.endDate), 'dd.MM.yyyy')}</p>
     <p>Students: {course.studentCount}</p>
-    <Link href={`/courses/${course.id}`}>
-      <Button variant="link">Materials</Button>
+    <Link href={`/teacher/courses/${course.id}`}>
+      <Button variant="link">Управление курсом</Button>
     </Link>
   </div>
 );
@@ -34,10 +34,7 @@ export default function TeacherCourseList({ courses }: TeacherCourseListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Мои курсы</h2>
-        <CreateCourseDialog />
-      </div>
+      <h2 className="text-xl font-semibold mb-6">Мои курсы</h2>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {courses.map((course) => (
           <CourseCard key={course.id} course={course} />

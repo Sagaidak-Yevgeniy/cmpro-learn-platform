@@ -26,7 +26,7 @@ export default function CourseCard({ course }: CourseCardProps) {
       <div className="h-40 bg-gray-200">
         {course.imageUrl ? (
           <img 
-            src={course.imageUrl ? `/uploads/${course.imageUrl}` : undefined} 
+            src={course.imageUrl || undefined} 
             alt={course.title} 
             className="w-full h-full object-cover"
           />
@@ -59,7 +59,7 @@ export default function CourseCard({ course }: CourseCardProps) {
             <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-white">
               <User className="h-4 w-4" />
             </div>
-            <span className="ml-2 text-xs text-gray-500">ID: {course.teacherId}</span>
+            <span className="ml-2 text-xs text-gray-500">Преподаватель: {course.teacherName}</span>
           </div>
           <Link href={`/courses/${course.id}`}>
             <Button variant="outline" size="sm" className="text-primary border-primary hover:bg-primary/10">
