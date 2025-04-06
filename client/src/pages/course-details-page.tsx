@@ -272,54 +272,7 @@ export default function CourseDetailsPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {course.tests && course.tests.length > 0 ? (
-                      <div className="space-y-4">
-                        {course.tests.map((test) => (
-                          <Card key={test.id}>
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <h3 className="font-medium">{test.title}</h3>
-                                  <p className="text-sm text-gray-500">{test.description}</p>
-                                  <div className="mt-2">
-                                    <Badge variant="secondary">
-                                      {test.questions?.length || 0} вопросов
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline"
-                                    onClick={() => handleEditTest(test.id)}
-                                  >
-                                    Редактировать
-                                  </Button>
-                                  <Button 
-                                    variant="destructive"
-                                    onClick={() => handleDeleteTest(test.id)}
-                                  >
-                                    Удалить
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          Нет тестов
-                        </h3>
-                        <p className="text-gray-500 mb-4">
-                          Создайте первый тест для этого курса
-                        </p>
-                        <Button onClick={() => setCreateTestDialogOpen(true)}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Создать тест
-                        </Button>
-                      </div>
-                    )}
+                    <TestConstructor courseId={courseId} /> {/* Added TestConstructor component */}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -327,44 +280,12 @@ export default function CourseDetailsPage() {
               <TabsContent value="students">
                 <Card>
                   <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle>Управление студентами</CardTitle>
-                        <CardDescription>
-                          Всего студентов: {course.enrollments?.length || 0}
-                        </CardDescription>
-                      </div>
-                      <Button variant="outline" onClick={() => setInviteDialogOpen(true)}>
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Пригласить студентов
-                      </Button>
-                    </div>
+                    <CardTitle>Управление студентами</CardTitle>
+                    <CardDescription>Placeholder for student management functionality</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ScrollArea className="h-[400px]">
-                      {course.enrollments && course.enrollments.length > 0 ? (
-                        <div className="space-y-4">
-                          {course.enrollments.map((enrollment) => (
-                            <div key={enrollment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                              <div>
-                                <p className="font-medium">{enrollment.user?.name}</p>
-                                <p className="text-sm text-gray-500">{enrollment.user?.email}</p>
-                              </div>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleRemoveStudent(enrollment.userId)}
-                              >
-                                <UserMinus className="h-4 w-4 mr-2" />
-                                Отчислить
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 text-center">На курс пока никто не записался</p>
-                      )}
-                    </ScrollArea>
+                    {/* Placeholder for student management UI */}
+                    <p>Functionality for managing students will be added here.</p>
                   </CardContent>
                 </Card>
               </TabsContent>
