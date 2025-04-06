@@ -77,6 +77,69 @@ export default function CourseManagementPage() {
     },
   });
 
+  const addLectureMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await apiRequest("POST", `/api/courses/${courseId}/lectures`, data);
+      if (!response.ok) throw new Error("Ошибка при добавлении лекции");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Лекция добавлена",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
+      setAddContentDialog(false);
+    },
+  });
+
+  const addMaterialMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await apiRequest("POST", `/api/courses/${courseId}/materials`, data);
+      if (!response.ok) throw new Error("Ошибка при добавлении материала");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Материал добавлен",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
+      setAddContentDialog(false);
+    },
+  });
+
+  const addTestMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await apiRequest("POST", `/api/courses/${courseId}/tests`, data);
+      if (!response.ok) throw new Error("Ошибка при создании теста");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Тест создан",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
+      setAddContentDialog(false);
+    },
+  });
+
+  const deleteContentMutation = useMutation({
+    mutationFn: async ({ type, id }) => {
+      const response = await apiRequest("DELETE", `/api/courses/${courseId}/${type}/${id}`);
+      if (!response.ok) throw new Error("Ошибка при удалении");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Элемент удален",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("DELETE", `/api/courses/${courseId}`);
@@ -106,6 +169,39 @@ export default function CourseManagementPage() {
 
   const handleDeleteCourse = () => {
     deleteMutation.mutate();
+  };
+
+  const handleContentSubmit = async (formData) => {
+    switch (contentType) {
+      case "lecture":
+        await addLectureMutation.mutateAsync({
+          title: formData.title,
+          description: formData.description,
+          videoUrl: formData.videoUrl,
+          duration: parseInt(formData.duration)
+        });
+        break;
+      case "material":
+        await addMaterialMutation.mutateAsync({
+          title: formData.title,
+          description: formData.description,
+          type: formData.type,
+          fileUrl: formData.fileUrl
+        });
+        break;
+      case "test":
+        await addTestMutation.mutateAsync({
+          title: formData.title,
+          description: formData.description,
+          passingScore: parseInt(formData.passingScore),
+          timeLimit: parseInt(formData.timeLimit)
+        });
+        break;
+    }
+  };
+
+  const handleDeleteContent = async (type, id) => {
+    await deleteContentMutation.mutateAsync({ type, id });
   };
 
   const ContentDialog = () => (
