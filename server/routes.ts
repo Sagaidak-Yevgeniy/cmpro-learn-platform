@@ -220,6 +220,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+    app.post("/api/courses/:id/lectures", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Необходима авторизация" });
+  }
+
+  try {
+    const courseId = parseInt(req.params.id);
+    const course = await storage.getCourse(courseId);
+
+    if (!course) {
+      return res.status(404).json({ message: "Курс не найден" });
+    }
+
+    if (req.user?.id !== course.teacherId) {
+      return res.status(403).json({ message: "Нет прав для добавления лекций" });
+    }
+
+    const lecture = await storage.createMaterial({
+      courseId,
+      title: req.body.title,
+      type: "lecture",
+      description: req.body.description,
+      content: req.body.videoUrl,
+      order: req.body.order || 0
+    });
+
+    res.status(201).json(lecture);
+  } catch (error) {
+    res.status(500).json({ message: "Ошибка при добавлении лекции" });
+  }
+});
+
   // Course Feedback API
   app.get("/api/courses/:id/feedback", async (req, res) => {
     try {

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -59,7 +58,8 @@ export default function CourseManagementPage() {
     fileUrl: "",
     type: "",
     passingScore: "",
-    timeLimit: ""
+    timeLimit: "",
+    order: ""
   });
 
   const { data: course, isLoading } = useQuery({
@@ -103,7 +103,8 @@ export default function CourseManagementPage() {
         fileUrl: "",
         type: "",
         passingScore: "",
-        timeLimit: ""
+        timeLimit: "",
+        order: ""
       });
     },
   });
@@ -129,7 +130,8 @@ export default function CourseManagementPage() {
         fileUrl: "",
         type: "",
         passingScore: "",
-        timeLimit: ""
+        timeLimit: "",
+        order: ""
       });
     },
   });
@@ -155,40 +157,62 @@ export default function CourseManagementPage() {
         fileUrl: "",
         type: "",
         passingScore: "",
-        timeLimit: ""
+        timeLimit: "",
+        order: ""
       });
     },
   });
 
   const handleContentSubmit = async (e) => {
     e.preventDefault();
+    const formData = new FormData(e.target);
+
     try {
       switch (contentType) {
         case "lecture":
           await addLectureMutation.mutateAsync({
-            title: contentForm.title,
-            description: contentForm.description,
-            videoUrl: contentForm.videoUrl,
-            duration: parseInt(contentForm.duration)
+            title: formData.get("title"),
+            description: formData.get("description"),
+            videoUrl: formData.get("videoUrl"),
+            duration: parseInt(formData.get("duration") as string),
+            order: parseInt(formData.get("order") as string) || 0
           });
           break;
+
         case "material":
           await addMaterialMutation.mutateAsync({
-            title: contentForm.title,
-            description: contentForm.description,
-            type: contentForm.type,
-            fileUrl: contentForm.fileUrl
+            title: formData.get("title"),
+            description: formData.get("description"),
+            type: formData.get("type"),
+            fileUrl: formData.get("fileUrl"),
+            order: parseInt(formData.get("order") as string) || 0
           });
           break;
+
         case "test":
           await addTestMutation.mutateAsync({
-            title: contentForm.title,
-            description: contentForm.description,
-            passingScore: parseInt(contentForm.passingScore),
-            timeLimit: parseInt(contentForm.timeLimit)
+            title: formData.get("title"),
+            description: formData.get("description"),
+            passingScore: parseInt(formData.get("passingScore") as string),
+            timeLimit: parseInt(formData.get("timeLimit") as string),
+            order: parseInt(formData.get("order") as string) || 0
           });
           break;
       }
+
+      queryClient.invalidateQueries([`/api/courses/${courseId}`]);
+      setAddContentDialog(false);
+      setContentForm({
+        title: "",
+        description: "",
+        videoUrl: "",
+        duration: "",
+        fileUrl: "",
+        type: "",
+        passingScore: "",
+        timeLimit: ""
+      });
+
     } catch (error) {
       toast({
         title: "Ошибка",
@@ -258,6 +282,13 @@ export default function CourseManagementPage() {
                   placeholder="Длительность (минут)"
                   required
                 />
+                <Input
+                  name="order"
+                  value={contentForm.order}
+                  onChange={handleInputChange}
+                  type="number"
+                  placeholder="Порядок"
+                />
               </div>
             )}
             {contentType === "material" && (
@@ -276,6 +307,13 @@ export default function CourseManagementPage() {
                   onChange={handleInputChange}
                   placeholder="Тип материала"
                   required
+                />
+                <Input
+                  name="order"
+                  value={contentForm.order}
+                  onChange={handleInputChange}
+                  type="number"
+                  placeholder="Порядок"
                 />
               </div>
             )}
@@ -296,6 +334,13 @@ export default function CourseManagementPage() {
                   type="number"
                   placeholder="Время на выполнение (минут)"
                   required
+                />
+                <Input
+                  name="order"
+                  value={contentForm.order}
+                  onChange={handleInputChange}
+                  type="number"
+                  placeholder="Порядок"
                 />
               </div>
             )}

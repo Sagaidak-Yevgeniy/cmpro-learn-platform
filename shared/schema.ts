@@ -71,6 +71,17 @@ export const insertEnrollmentSchema = createInsertSchema(enrollments).pick({
 
 export const materials = pgTable("materials", {
   id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  type: text("type", { enum: ["lecture", "material", "test"] }).notNull(),
+  description: text("description"),
+  content: text("content").notNull(),
+  videoUrl: text("video_url"),
+  fileUrl: text("file_url"),
+  duration: integer("duration"),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  id: serial("id").primaryKey(),
   courseId: integer("course_id").notNull(),
   title: text("title").notNull(),
   type: text("type", { enum: ["lecture", "presentation", "lab", "test", "additional"] }).notNull(),
