@@ -155,7 +155,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Персональное обучение в нашем центре
+              Персональное обучение в нашей школе программирования
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Получите индивидуальный подход и погрузитесь в обучение вместе с профессиональными преподавателями в комфортной атмосфере
@@ -179,16 +179,16 @@ export default function HomePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Телефон</label>
-                  <input type="tel" className="w-full rounded-lg border border-gray-300 px-4 py-2" placeholder="+7 (999) 123-45-67" />
+                  <input type="tel" className="w-full rounded-lg border border-gray-300 px-4 py-2" placeholder="+7 (777) 123-45-67" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Интересующий курс</label>
                   <select className="w-full rounded-lg border border-gray-300 px-4 py-2">
                     <option value="">Выберите курс</option>
-                    <option value="programming">Программирование</option>
-                    <option value="business">Бизнес и менеджмент</option>
-                    <option value="science">Наука и инженерия</option>
-                    <option value="humanities">Языки и гуманитарные науки</option>
+                    <option value="programming">Python</option>
+                    <option value="business">GOlang</option>
+                    <option value="science">WEB-технологии</option>
+                    <option value="humanities">Компьютерная графика</option>
                   </select>
                 </div>
                 <button type="submit" className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors">
