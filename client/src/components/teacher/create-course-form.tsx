@@ -128,8 +128,17 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
   });
   
   // Обработчик отправки формы
-  const onSubmit = (values: CreateCourseFormValues) => {
-    createCourseMutation.mutate(values);
+  const onSubmit = async (values: CreateCourseFormValues) => {
+    try {
+      const courseData = await createCourseMutation.mutateAsync(values);
+      if (selectedFile) {
+        onSuccess?.({ ...courseData, imageFile: selectedFile });
+      } else {
+        onSuccess?.(courseData);
+      }
+    } catch (error) {
+      console.error("Ошибка при создании курса:", error);
+    }
   };
   
   // Обработчик загрузки изображения

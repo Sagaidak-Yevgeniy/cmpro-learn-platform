@@ -29,7 +29,28 @@ export default function CreateCourseDialog() {
             Заполните информацию о курсе CodeMastersPRO. Все поля, отмеченные звездочкой (*), обязательны для заполнения.
           </DialogDescription>
         </DialogHeader>
-        <CreateCourseForm onSuccess={() => setOpen(false)} />
+        <CreateCourseForm 
+          onSuccess={async (data) => {
+            if (data.imageFile) {
+              const formData = new FormData();
+              formData.append("image", data.imageFile);
+              
+              try {
+                const response = await fetch(`/api/courses/${data.id}/image`, {
+                  method: "PUT",
+                  body: formData,
+                });
+                
+                if (!response.ok) {
+                  throw new Error("Ошибка при загрузке изображения");
+                }
+              } catch (error) {
+                console.error("Ошибка при загрузке изображения:", error);
+              }
+            }
+            setOpen(false);
+          }} 
+        />
       </DialogContent>
     </Dialog>
   );
