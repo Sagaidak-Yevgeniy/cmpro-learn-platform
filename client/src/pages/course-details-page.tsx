@@ -208,7 +208,92 @@ export default function CourseDetailsPage() {
 
               <TabsContent value="materials">
                 <Card>
-                  <CardContent className="p-6">
+                  <CardHeader>
+                    <CardTitle>Материалы курса</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <UploadMaterialForm courses={[course]} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="assignments">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Управление заданиями</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <AssignmentsManager courseId={course.id} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="tests">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Управление тестами</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TestConstructor courseId={course.id} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="students">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Управление студентами</CardTitle>
+                    <CardDescription>
+                      Всего студентов: {course.enrollments?.length || 0}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[400px]">
+                      {course.enrollments && course.enrollments.length > 0 ? (
+                        <div className="space-y-4">
+                          {course.enrollments.map((enrollment) => (
+                            <div key={enrollment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                              <div>
+                                <p className="font-medium">{enrollment.user?.name}</p>
+                                <p className="text-sm text-gray-500">{enrollment.user?.email}</p>
+                              </div>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => removeMutation.mutate(enrollment.id)}
+                              >
+                                Отчислить
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center">На курс пока никто не записался</p>
+                      )}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="info">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Информация о курсе</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-medium">Описание</h3>
+                        <p className="text-gray-600">{course.description}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Дата создания</h3>
+                        <p className="text-gray-600">{new Date(course.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>ent className="p-6">
                     <UploadMaterialForm courseId={courseId} />
                   </CardContent>
                 </Card>
