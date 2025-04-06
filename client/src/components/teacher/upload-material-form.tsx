@@ -44,6 +44,11 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
   const { toast } = useToast();
   const [fileContent, setFileContent] = useState<string | null>(null);
   
+  const { data: materials } = useQuery({
+    queryKey: [`/api/courses/${courses[0]?.id}/materials`],
+    enabled: !!courses[0]?.id,
+  });
+  
   const form = useForm<UploadMaterialFormValues>({
     resolver: zodResolver(uploadMaterialSchema),
     defaultValues: {
@@ -272,6 +277,25 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
           </div>
         </form>
       </Form>
+
+      {materials && materials.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-lg font-medium mb-4">Загруженные материалы</h3>
+          <div className="space-y-4">
+            {materials.map((material: any) => (
+              <div key={material.id} className="border rounded-lg p-4">
+                <h4 className="font-medium">{material.title}</h4>
+                <p className="text-sm text-gray-500">{material.description}</p>
+                <div className="mt-2">
+                  <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                    {material.type}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Course, Material, Assignment } from "@shared/schema";
 import { Loader2, Calendar, Clock, User, CheckCircle } from "lucide-react";
