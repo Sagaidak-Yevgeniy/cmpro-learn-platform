@@ -50,7 +50,7 @@ export default function Header() {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/">
-                <span className="text-primary font-bold text-2xl cursor-pointer">Учебная Платформа</span>
+                <span className="text-primary font-bold text-2xl cursor-pointer">CodeMastersPRO</span>
               </Link>
             </div>
 
