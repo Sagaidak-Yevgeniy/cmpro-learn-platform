@@ -276,24 +276,11 @@ export default function CourseDetailsPage() {
               </TabsContent>
 
               <TabsContent value="info">
+                <InfoTab />
+              </TabsContent>
+              <TabsContent value="materials">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Информация о курсе</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium">Описание</h3>
-                        <p className="text-gray-600">{course.description}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Дата создания</h3>
-                        <p className="text-gray-600">{new Date(course.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>ent className="p-6">
+                  <CardContent className="p-6">
                     <UploadMaterialForm courseId={courseId} />
                   </CardContent>
                 </Card>
