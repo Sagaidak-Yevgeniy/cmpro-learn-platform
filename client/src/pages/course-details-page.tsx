@@ -6,10 +6,10 @@ import { Calendar, Clock, User, CheckCircle, Loader2, Trash2, UserPlus, UserMinu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import UploadMaterialForm from "@/components/teacher/upload-material-form";
 import AssignmentsManager from "@/components/teacher/assignments-manager";
 import TestConstructor from "@/components/teacher/test-constructor";
-import CourseFeedback from "@/components/courses/course-feedback";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -72,6 +72,7 @@ export default function CourseDetailsPage() {
         description: "Студент удален из курса",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
+      setDeleteDialogOpen(false);
     },
   });
 
@@ -113,44 +114,6 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const handleUpdateCourseInfo = async (data: any) => {
-    try {
-      const response = await apiRequest("PATCH", `/api/courses/${courseId}`, data);
-      if (!response.ok) throw new Error("Failed to update course info");
-      queryClient.invalidateQueries([`/api/courses/${courseId}`]);
-      toast({
-        title: "Успешно",
-        description: "Информация о курсе обновлена"
-      });
-      setEditInfoDialogOpen(false);
-    } catch (error) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось обновить информацию о курсе",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleInviteStudents = async (emails: string[]) => {
-    try {
-      const response = await apiRequest("POST", `/api/courses/${courseId}/invite`, { emails });
-      if (!response.ok) throw new Error("Failed to invite students");
-      queryClient.invalidateQueries([`/api/courses/${courseId}`]);
-      toast({
-        title: "Успешно",
-        description: "Приглашения отправлены"
-      });
-      setInviteDialogOpen(false);
-    } catch (error) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось отправить приглашения",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleDeleteMaterial = async (materialId: number) => {
     try {
       const response = await apiRequest("DELETE", `/api/courses/${courseId}/materials/${materialId}`);
@@ -168,7 +131,6 @@ export default function CourseDetailsPage() {
       });
     }
   };
-
 
   if (isLoading) {
     return <div>Загрузка...</div>;
@@ -198,10 +160,8 @@ export default function CourseDetailsPage() {
   const confirmRemoveStudent = () => {
     if (selectedStudentId) {
       removeStudentMutation.mutate(selectedStudentId);
-      setDeleteDialogOpen(false);
     }
   };
-
 
   const header = (
     <div className="bg-gray-800 py-8">
@@ -253,22 +213,46 @@ export default function CourseDetailsPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Материалы курса</CardTitle>
+                    <CardDescription>
+                      Загруженные материалы: {course.materials?.length || 0}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <UploadMaterialForm courses={[course]} />
+                    <div className="space-y-6">
+                      <UploadMaterialForm courses={[course]} />
+                      {course.materials && course.materials.length > 0 ? (
+                        <div className="space-y-4">
+                          {course.materials.map((material) => (
+                            <Card key={material.id}>
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h4 className="font-medium">{material.title}</h4>
+                                    <p className="text-sm text-gray-500">{material.description}</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button variant="outline" onClick={() => window.open(material.url, '_blank')}>
+                                      Просмотреть
+                                    </Button>
+                                    <Button variant="destructive" onClick={() => handleDeleteMaterial(material.id)}>
+                                      Удалить
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center">Материалы пока не загружены</p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="assignments">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Управление заданиями</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <AssignmentsManager courseId={course.id} />
-                  </CardContent>
-                </Card>
+                <AssignmentsManager courseId={courseId} />
               </TabsContent>
 
               <TabsContent value="tests">
@@ -369,196 +353,6 @@ export default function CourseDetailsPage() {
                               <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => removeMutation.mutate(enrollment.id)}
-                              >
-                                Отчислить
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 text-center">На курс пока никто не записался</p>
-                      )}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="info">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Информация о курсе</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium">Описание курса</h3>
-                        <p className="text-gray-600 mt-1">{course.description}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Длительность</h3>
-                        <p className="text-gray-600 mt-1">{course.duration}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Даты проведения</h3>
-                        <p className="text-gray-600 mt-1">
-                          {format(new Date(course.startDate), 'dd.MM.yyyy')} - {format(new Date(course.endDate), 'dd.MM.yyyy')}
-                        </p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Статистика</h3>
-                        <div className="grid grid-cols-2 gap-4 mt-2">
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500">Студентов записано</p>
-                            <p className="text-2xl font-bold">{course.enrollments?.length || 0}</p>
-                          </div>
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500">Материалов</p>
-                            <p className="text-2xl font-bold">{course.materials?.length || 0}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="materials">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle>Материалы курса</CardTitle>
-                        <CardDescription>
-                          Загруженные материалы: {course.materials?.length || 0}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      <div className="border-b pb-6">
-                        <h3 className="text-lg font-medium mb-4">Загрузка нового материала</h3>
-                        <UploadMaterialForm courses={[course]} />
-                      </div>
-
-                      <div>
-                        <h3 className="text-lg font-medium mb-4">Список материалов</h3>
-                        {course.materials && course.materials.length > 0 ? (
-                          <div className="space-y-4">
-                            {course.materials.map((material) => (
-                              <Card key={material.id}>
-                                <CardContent className="p-4">
-                                  <div className="flex justify-between items-center">
-                                    <div>
-                                      <h4 className="font-medium">{material.title}</h4>
-                                      <p className="text-sm text-gray-500">{material.description}</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <Button variant="outline" onClick={() => window.open(material.url, '_blank')}>
-                                        Просмотреть
-                                      </Button>
-                                      <Button variant="destructive" onClick={() => handleDeleteMaterial(material.id)}>
-                                        Удалить
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 text-center">Материалы пока не загружены</p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="assignments">
-                <AssignmentsManager courseId={courseId} />
-              </TabsContent>
-
-              <TabsContent value="tests">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle>Тесты</CardTitle>
-                      <Button onClick={() => setCreateTestDialogOpen(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Создать тест
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {course.tests && course.tests.length > 0 ? (
-                      <div className="space-y-4">
-                        {course.tests.map((test) => (
-                          <Card key={test.id}>
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <h3 className="font-medium">{test.title}</h3>
-                                  <p className="text-sm text-gray-500">{test.description}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline"
-                                    onClick={() => handleEditTest(test.id)}
-                                  >
-                                    Редактировать
-                                  </Button>
-                                  <Button 
-                                    variant="destructive"
-                                    onClick={() => handleDeleteTest(test.id)}
-                                  >
-                                    Удалить
-                                  </Button>
-                                  <Button variant="outline">
-                                    Начать тест
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          Нет тестов
-                        </h3>
-                        <p className="text-gray-500 mb-4">
-                          Создайте первый тест для этого курса
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="students">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Управление студентами</CardTitle>
-                    <CardDescription>
-                      Всего студентов: {course.enrollments?.length || 0}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[400px]">
-                      {course.enrollments && course.enrollments.length > 0 ? (
-                        <div className="space-y-4">
-                          {course.enrollments.map((enrollment) => (
-                            <div key={enrollment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                              <div>
-                                <p className="font-medium">{enrollment.user?.name}</p>
-                                <p className="text-sm text-gray-500">{enrollment.user?.email}</p>
-                              </div>
-                              <Button
-                                variant="destructive"
-                                size="sm"
                                 onClick={() => handleRemoveStudent(enrollment.userId)}
                               >
                                 <UserMinus className="h-4 w-4 mr-2" />
@@ -630,41 +424,28 @@ export default function CourseDetailsPage() {
 
             <TabsContent value="info">
               <Card>
-                  <CardHeader>
-                    <CardTitle>Информация о курсе</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium">Описание курса</h3>
-                        <p className="text-gray-600 mt-1">{course.description}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Длительность</h3>
-                        <p className="text-gray-600 mt-1">{course.duration}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Даты проведения</h3>
-                        <p className="text-gray-600 mt-1">
-                          {format(new Date(course.startDate), 'dd.MM.yyyy')} - {format(new Date(course.endDate), 'dd.MM.yyyy')}
-                        </p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Статистика</h3>
-                        <div className="grid grid-cols-2 gap-4 mt-2">
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500">Студентов записано</p>
-                            <p className="text-2xl font-bold">{course.enrollments?.length || 0}</p>
-                          </div>
-                          <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-500">Материалов</p>
-                            <p className="text-2xl font-bold">{course.materials?.length || 0}</p>
-                          </div>
-                        </div>
-                      </div>
+                <CardHeader>
+                  <CardTitle>Информация о курсе</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-medium">Описание курса</h3>
+                      <p className="text-gray-600 mt-1">{course.description}</p>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <h3 className="font-medium">Длительность</h3>
+                      <p className="text-gray-600 mt-1">{course.duration}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Даты проведения</h3>
+                      <p className="text-gray-600 mt-1">
+                        {format(new Date(course.startDate), 'dd.MM.yyyy')} - {format(new Date(course.endDate), 'dd.MM.yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {isEnrolled && (
@@ -793,9 +574,11 @@ export default function CourseDetailsPage() {
       <Dialog open={createTestDialogOpen} onOpenChange={setCreateTestDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Создание теста</DialogTitle>
+            <DialogTitle>
+              {selectedTest ? "Редактирование теста" : "Создание теста"}
+            </DialogTitle>
             <DialogDescription>
-              Создайте тест для проверки знаний студентов
+              {selectedTest ? "Измените параметры теста" : "Создайте тест для проверки знаний студентов"}
             </DialogDescription>
           </DialogHeader>
           <TestConstructor courseId={courseId} testId={selectedTest} />
