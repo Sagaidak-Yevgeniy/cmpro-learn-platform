@@ -67,7 +67,7 @@ export default function CourseDetailsPage() {
               alt={course.title}
               className="w-full h-full object-cover"
               onError={(e) => {
-                e.currentTarget.src = '/public/placeholder-course.jpg';
+                e.currentTarget.src = '/placeholder-course.jpg';
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>

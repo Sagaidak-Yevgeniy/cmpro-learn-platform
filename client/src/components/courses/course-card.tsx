@@ -33,7 +33,7 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
             alt={course.title} 
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
             onError={(e) => {
-              e.currentTarget.src = '/public/placeholder-course.jpg';
+              e.currentTarget.src = '/placeholder-course.jpg';
             }}
           />
         ) : (
