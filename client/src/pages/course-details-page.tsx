@@ -38,7 +38,12 @@ export default function CourseDetailsPage() {
   });
 
   const isTeacher = course ? user?.id === course.teacherId : false;
-  const isEnrolled = course ? course.enrollments?.some(e => e.userId === user?.id) : false;
+  const { data: enrollments } = useQuery({
+    queryKey: [`/api/enrollments/my`],
+    enabled: !!user,
+  });
+
+  const isEnrolled = enrollments?.some(e => e.courseId === courseId);
 
   const { data: materials, isLoading: materialsLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}/materials`],
