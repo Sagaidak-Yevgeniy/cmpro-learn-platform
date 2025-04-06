@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -21,6 +22,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,24 +43,28 @@ import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
-
 export default function CourseManagementPage() {
   const { id } = useParams();
   const courseId = parseInt(id || "0");
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
-  const [isAddingLecture, setIsAddingLecture] = useState(false);
-  const [isAddingTest, setIsAddingTest] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editedCourse, setEditedCourse] = useState(null);
   const [addContentDialog, setAddContentDialog] = useState(false);
   const [contentType, setContentType] = useState("");
+  const [contentForm, setContentForm] = useState({
+    title: "",
+    description: "",
+    videoUrl: "",
+    duration: "",
+    fileUrl: "",
+    type: "",
+    passingScore: "",
+    timeLimit: ""
+  });
 
   const { data: course, isLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
+    enabled: Boolean(courseId)
   });
 
   const updateCourseMutation = useMutation({
@@ -73,7 +79,6 @@ export default function CourseManagementPage() {
         description: "Курс обновлен",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
-      setEditMode(false);
     },
   });
 
@@ -90,6 +95,16 @@ export default function CourseManagementPage() {
       });
       queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
       setAddContentDialog(false);
+      setContentForm({
+        title: "",
+        description: "",
+        videoUrl: "",
+        duration: "",
+        fileUrl: "",
+        type: "",
+        passingScore: "",
+        timeLimit: ""
+      });
     },
   });
 
@@ -106,6 +121,16 @@ export default function CourseManagementPage() {
       });
       queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
       setAddContentDialog(false);
+      setContentForm({
+        title: "",
+        description: "",
+        videoUrl: "",
+        duration: "",
+        fileUrl: "",
+        type: "",
+        passingScore: "",
+        timeLimit: ""
+      });
     },
   });
 
@@ -122,38 +147,64 @@ export default function CourseManagementPage() {
       });
       queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
       setAddContentDialog(false);
+      setContentForm({
+        title: "",
+        description: "",
+        videoUrl: "",
+        duration: "",
+        fileUrl: "",
+        type: "",
+        passingScore: "",
+        timeLimit: ""
+      });
     },
   });
 
-  const deleteContentMutation = useMutation({
-    mutationFn: async ({ type, id }) => {
-      const response = await apiRequest("DELETE", `/api/courses/${courseId}/${type}/${id}`);
-      if (!response.ok) throw new Error("Ошибка при удалении");
-      return response.json();
-    },
-    onSuccess: () => {
+  const handleContentSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      switch (contentType) {
+        case "lecture":
+          await addLectureMutation.mutateAsync({
+            title: contentForm.title,
+            description: contentForm.description,
+            videoUrl: contentForm.videoUrl,
+            duration: parseInt(contentForm.duration)
+          });
+          break;
+        case "material":
+          await addMaterialMutation.mutateAsync({
+            title: contentForm.title,
+            description: contentForm.description,
+            type: contentForm.type,
+            fileUrl: contentForm.fileUrl
+          });
+          break;
+        case "test":
+          await addTestMutation.mutateAsync({
+            title: contentForm.title,
+            description: contentForm.description,
+            passingScore: parseInt(contentForm.passingScore),
+            timeLimit: parseInt(contentForm.timeLimit)
+          });
+          break;
+      }
+    } catch (error) {
       toast({
-        title: "Успешно",
-        description: "Элемент удален",
+        title: "Ошибка",
+        description: "Не удалось сохранить",
+        variant: "destructive"
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
-    },
-  });
+    }
+  };
 
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("DELETE", `/api/courses/${courseId}`);
-      if (!response.ok) throw new Error("Ошибка при удалении курса");
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Успешно",
-        description: "Курс удален",
-      });
-      window.location.href = "/teacher";
-    },
-  });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setContentForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   if (isLoading) {
     return (
@@ -163,47 +214,6 @@ export default function CourseManagementPage() {
     );
   }
 
-  const handleUpdateCourse = () => {
-    updateCourseMutation.mutate(editedCourse);
-  };
-
-  const handleDeleteCourse = () => {
-    deleteMutation.mutate();
-  };
-
-  const handleContentSubmit = async (formData) => {
-    switch (contentType) {
-      case "lecture":
-        await addLectureMutation.mutateAsync({
-          title: formData.title,
-          description: formData.description,
-          videoUrl: formData.videoUrl,
-          duration: parseInt(formData.duration)
-        });
-        break;
-      case "material":
-        await addMaterialMutation.mutateAsync({
-          title: formData.title,
-          description: formData.description,
-          type: formData.type,
-          fileUrl: formData.fileUrl
-        });
-        break;
-      case "test":
-        await addTestMutation.mutateAsync({
-          title: formData.title,
-          description: formData.description,
-          passingScore: parseInt(formData.passingScore),
-          timeLimit: parseInt(formData.timeLimit)
-        });
-        break;
-    }
-  };
-
-  const handleDeleteContent = async (type, id) => {
-    await deleteContentMutation.mutateAsync({ type, id });
-  };
-
   const ContentDialog = () => (
     <Dialog open={addContentDialog} onOpenChange={setAddContentDialog}>
       <DialogContent className="sm:max-w-[500px]">
@@ -212,49 +222,94 @@ export default function CourseManagementPage() {
             {contentType === "lecture" && "Добавить лекцию"}
             {contentType === "material" && "Добавить материал"}
             {contentType === "test" && "Создать тест"}
-            {contentType === "assignment" && "Добавить задание"}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <form onSubmit={handleContentSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Input placeholder="Название" />
-            <Textarea placeholder="Описание" />
+            <Input
+              name="title"
+              value={contentForm.title}
+              onChange={handleInputChange}
+              placeholder="Название"
+              required
+            />
+            <Textarea
+              name="description"
+              value={contentForm.description}
+              onChange={handleInputChange}
+              placeholder="Описание"
+              required
+            />
             {contentType === "lecture" && (
               <div className="space-y-2">
-                <Input type="url" placeholder="Ссылка на видео" />
-                <Input type="number" placeholder="Длительность (минут)" />
+                <Input
+                  name="videoUrl"
+                  value={contentForm.videoUrl}
+                  onChange={handleInputChange}
+                  type="url"
+                  placeholder="Ссылка на видео"
+                  required
+                />
+                <Input
+                  name="duration"
+                  value={contentForm.duration}
+                  onChange={handleInputChange}
+                  type="number"
+                  placeholder="Длительность (минут)"
+                  required
+                />
               </div>
             )}
             {contentType === "material" && (
               <div className="space-y-2">
-                <Input type="file" />
-                <Input placeholder="Тип материала" />
+                <Input
+                  name="fileUrl"
+                  value={contentForm.fileUrl}
+                  onChange={handleInputChange}
+                  type="url"
+                  placeholder="Ссылка на файл"
+                  required
+                />
+                <Input
+                  name="type"
+                  value={contentForm.type}
+                  onChange={handleInputChange}
+                  placeholder="Тип материала"
+                  required
+                />
               </div>
             )}
             {contentType === "test" && (
               <div className="space-y-2">
-                <Input type="number" placeholder="Проходной балл" />
-                <Input type="number" placeholder="Время на выполнение (минут)" />
-              </div>
-            )}
-            {contentType === "assignment" && (
-              <div className="space-y-2">
-                <Input type="datetime-local" />
-                <Input type="number" placeholder="Максимальный балл" />
+                <Input
+                  name="passingScore"
+                  value={contentForm.passingScore}
+                  onChange={handleInputChange}
+                  type="number"
+                  placeholder="Проходной балл"
+                  required
+                />
+                <Input
+                  name="timeLimit"
+                  value={contentForm.timeLimit}
+                  onChange={handleInputChange}
+                  type="number"
+                  placeholder="Время на выполнение (минут)"
+                  required
+                />
               </div>
             )}
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setAddContentDialog(false)}>
-            Отмена
-          </Button>
-          <Button>Сохранить</Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAddContentDialog(false)}>
+              Отмена
+            </Button>
+            <Button type="submit">Сохранить</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
-
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -279,7 +334,7 @@ export default function CourseManagementPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <p className="text-2xl font-bold">{course?.students?.length || 0}</p>
+                <p className="text-2xl font-bold">{course?.enrollments?.length || 0}</p>
                 <p className="text-sm text-gray-500">Студентов</p>
               </div>
               <div className="space-y-2">
@@ -316,8 +371,19 @@ export default function CourseManagementPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium">Прогресс курса</label>
-                      <Progress value={65} className="mt-2" />
-                      <p className="text-sm text-gray-500 mt-1">65% материалов загружено</p>
+                      <Progress 
+                        value={
+                          ((course?.materials?.length || 0) + 
+                          (course?.lectures?.length || 0) + 
+                          (course?.tests?.length || 0)) / 30 * 100
+                        } 
+                        className="mt-2" 
+                      />
+                      <p className="text-sm text-gray-500 mt-1">
+                        {((course?.materials?.length || 0) + 
+                        (course?.lectures?.length || 0) + 
+                        (course?.tests?.length || 0))} материалов загружено
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -340,7 +406,7 @@ export default function CourseManagementPage() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {course?.lectures?.length === 0 ? (
+                  {!course?.lectures?.length ? (
                     <div className="text-center py-8">
                       <Video className="h-12 w-12 mx-auto text-gray-400" />
                       <p className="mt-4 text-gray-500">Лекции пока не добавлены</p>
@@ -387,7 +453,7 @@ export default function CourseManagementPage() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {course?.materials?.length === 0 ? (
+                  {!course?.materials?.length ? (
                     <div className="text-center py-8">
                       <FileText className="h-12 w-12 mx-auto text-gray-400" />
                       <p className="mt-4 text-gray-500">Материалы пока не добавлены</p>
@@ -415,49 +481,6 @@ export default function CourseManagementPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="assignments" className="mt-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Задания</CardTitle>
-                  <Button onClick={() => {
-                    setContentType("assignment");
-                    setAddContentDialog(true);
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Создать задание
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  {course?.assignments?.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Book className="h-12 w-12 mx-auto text-gray-400" />
-                      <p className="mt-4 text-gray-500">Задания пока не добавлены</p>
-                    </div>
-                  ) : (
-                    <ScrollArea className="h-[400px]">
-                      {course.assignments?.map((assignment) => (
-                        <div key={assignment.id} className="flex items-center justify-between p-4 border-b">
-                          <div>
-                            <p className="font-medium">{assignment.title}</p>
-                            <p className="text-sm text-gray-500">
-                              Срок сдачи: {format(new Date(assignment.dueDate), 'dd MMM yyyy', { locale: ru })}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              <ClipboardCheck className="h-4 w-4 mr-2" />
-                              Проверить работы
-                            </Button>
-                            <Button variant="destructive" size="sm">Удалить</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </ScrollArea>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="tests" className="mt-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
@@ -471,7 +494,7 @@ export default function CourseManagementPage() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {course?.tests?.length === 0 ? (
+                  {!course?.tests?.length ? (
                     <div className="text-center py-8">
                       <TestTube className="h-12 w-12 mx-auto text-gray-400" />
                       <p className="mt-4 text-gray-500">Тесты пока не добавлены</p>
@@ -504,7 +527,7 @@ export default function CourseManagementPage() {
                   <CardTitle>Студенты курса</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {course?.enrollments?.length === 0 ? (
+                  {!course?.enrollments?.length ? (
                     <div className="text-center py-8">
                       <Users className="h-12 w-12 mx-auto text-gray-400" />
                       <p className="mt-4 text-gray-500">Студенты пока не зарегистрированы</p>
@@ -572,10 +595,7 @@ export default function CourseManagementPage() {
               <CardTitle>Настройки курса</CardTitle>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full" onClick={() => {
-                setEditMode(true);
-                setEditedCourse({...course});
-              }}>
+              <Button variant="outline" className="w-full" onClick={() => updateCourseMutation.mutate(course)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Редактировать курс
               </Button>
@@ -584,24 +604,6 @@ export default function CourseManagementPage() {
         </div>
       </div>
       <ContentDialog />
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Удаление курса</DialogTitle>
-            <DialogDescription>
-              Вы уверены, что хотите удалить этот курс? Это действие нельзя отменить.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Отмена
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteCourse}>
-              Удалить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
