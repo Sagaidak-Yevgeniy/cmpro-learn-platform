@@ -162,46 +162,6 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const InfoTab = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Основная информация</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <User className="h-5 w-5 text-gray-400" />
-              <span>Преподаватель: {course.teacher?.name || "Не указан"}</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Calendar className="h-5 w-5 text-gray-400" />
-              <span>
-                {format(new Date(course.startDate), 'dd.MM.yyyy')} - {format(new Date(course.endDate), 'dd.MM.yyyy')}
-              </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Clock className="h-5 w-5 text-gray-400" />
-              <span>{course.duration}</span>
-            </div>
-          </div>
-          <div className="mt-6">
-            <h3 className="font-medium mb-2">Описание курса:</h3>
-            <p className="text-gray-600 whitespace-pre-line">{course.description}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Отзывы студентов</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CourseFeedback courseId={courseId} isEnrolled={isEnrolled} />
-        </CardContent>
-      </Card>
-    </div>
-  );
 
   const header = (
     <div className="bg-gray-800 py-8">
@@ -385,8 +345,44 @@ export default function CourseDetailsPage() {
               </TabsContent>
 
               <TabsContent value="info">
-                <InfoTab />
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Информация о курсе</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-medium">Описание курса</h3>
+                        <p className="text-gray-600 mt-1">{course.description}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Длительность</h3>
+                        <p className="text-gray-600 mt-1">{course.duration}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Даты проведения</h3>
+                        <p className="text-gray-600 mt-1">
+                          {format(new Date(course.startDate), 'dd.MM.yyyy')} - {format(new Date(course.endDate), 'dd.MM.yyyy')}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Статистика</h3>
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Студентов записано</p>
+                            <p className="text-2xl font-bold">{course.enrollments?.length || 0}</p>
+                          </div>
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Материалов</p>
+                            <p className="text-2xl font-bold">{course.materials?.length || 0}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
+
               <TabsContent value="materials">
                 <Card>
                   <CardHeader>
@@ -540,7 +536,42 @@ export default function CourseDetailsPage() {
               </TabsContent>
 
               <TabsContent value="info">
-                <InfoTab />
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Информация о курсе</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-medium">Описание курса</h3>
+                        <p className="text-gray-600 mt-1">{course.description}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Длительность</h3>
+                        <p className="text-gray-600 mt-1">{course.duration}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Даты проведения</h3>
+                        <p className="text-gray-600 mt-1">
+                          {format(new Date(course.startDate), 'dd.MM.yyyy')} - {format(new Date(course.endDate), 'dd.MM.yyyy')}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Статистика</h3>
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Студентов записано</p>
+                            <p className="text-2xl font-bold">{course.enrollments?.length || 0}</p>
+                          </div>
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Материалов</p>
+                            <p className="text-2xl font-bold">{course.materials?.length || 0}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </>
@@ -558,7 +589,42 @@ export default function CourseDetailsPage() {
             </TabsList>
 
             <TabsContent value="info">
-              <InfoTab />
+              <Card>
+                  <CardHeader>
+                    <CardTitle>Информация о курсе</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-medium">Описание курса</h3>
+                        <p className="text-gray-600 mt-1">{course.description}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Длительность</h3>
+                        <p className="text-gray-600 mt-1">{course.duration}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Даты проведения</h3>
+                        <p className="text-gray-600 mt-1">
+                          {format(new Date(course.startDate), 'dd.MM.yyyy')} - {format(new Date(course.endDate), 'dd.MM.yyyy')}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Статистика</h3>
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Студентов записано</p>
+                            <p className="text-2xl font-bold">{course.enrollments?.length || 0}</p>
+                          </div>
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-500">Материалов</p>
+                            <p className="text-2xl font-bold">{course.materials?.length || 0}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
             </TabsContent>
 
             {isEnrolled && (
