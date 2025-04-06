@@ -8,6 +8,7 @@ import CoursesPage from "@/pages/courses-page";
 import MyCoursesPage from "@/pages/my-courses-page";
 import CourseDetailsPage from "@/pages/course-details-page";
 import TeacherDashboard from "@/pages/teacher-dashboard";
+import CourseManagementPage from "@/pages/course-management-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import Header from "./components/layout/header";
 import Footer from "./components/layout/footer";
