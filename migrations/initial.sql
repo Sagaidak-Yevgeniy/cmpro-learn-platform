@@ -23,6 +23,18 @@ CREATE TABLE IF NOT EXISTS courses (
   student_count INTEGER NOT NULL DEFAULT 0
 );
 
+-- Add student_count column if it doesn't exist
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name='courses' AND column_name='student_count'
+  ) THEN
+    ALTER TABLE courses ADD COLUMN student_count INTEGER NOT NULL DEFAULT 0;
+  END IF;
+END $$;
+
 -- Создание таблицы записей на курсы
 CREATE TABLE IF NOT EXISTS enrollments (
   id SERIAL PRIMARY KEY,
