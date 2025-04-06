@@ -91,14 +91,11 @@ export default function TeacherDashboard() {
         
         <Tabs defaultValue="assignments" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="assignments">
-              <ClipboardList className="h-4 w-4 mr-2" />
-              Задания
-            </TabsTrigger>
-            <TabsTrigger value="materials">
-              <CheckSquare className="h-4 w-4 mr-2" />
-              Материалы
-            </TabsTrigger>
+            <TabsTrigger value="materials">Материалы</TabsTrigger>
+            <TabsTrigger value="assignments">Задания</TabsTrigger>
+            <TabsTrigger value="tests">Тесты</TabsTrigger>
+            <TabsTrigger value="students">Студенты</TabsTrigger>
+            <TabsTrigger value="info">Информация</TabsTrigger>
           </TabsList>
           
           <TabsContent value="assignments">
