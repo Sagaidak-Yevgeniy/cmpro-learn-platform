@@ -232,15 +232,56 @@ export default function TeacherDashboard() {
         </TabsList>
         
         <TabsContent value="courses">
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-              <div>
-                <h2 className="text-lg leading-6 font-medium text-gray-900">Мои курсы</h2>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">Список ваших активных курсов</p>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-semibold tracking-tight">Мои курсы</h2>
+                <p className="text-muted-foreground">Всего активных курсов: {stats.totalCourses}</p>
               </div>
               <CreateCourseDialog />
             </div>
-            <TeacherCourseList courses={stats.courses} />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {stats.courses.map((course) => (
+                <div key={course.id} className="group bg-white overflow-hidden rounded-xl border shadow-sm transition-all hover:shadow-lg">
+                  <div className="relative h-48">
+                    {course.imageUrl ? (
+                      <img 
+                        src={`/uploads/${course.imageUrl}`}
+                        alt={course.title} 
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder-course.jpg';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/90 to-primary text-white text-xl font-bold p-4 text-center">
+                        {course.title}
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2 py-1 text-xs font-medium bg-white/90 rounded-full">
+                        {course.studentCount} студентов
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-xl font-semibold tracking-tight mb-2">{course.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{course.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Старт: {format(new Date(course.startDate), 'dd.MM.yyyy')}
+                      </span>
+                      <Button 
+                        onClick={() => window.location.href = `/teacher/courses/${course.id}`}
+                        className="bg-primary text-white hover:bg-primary/90"
+                      >
+                        Управление
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
         
