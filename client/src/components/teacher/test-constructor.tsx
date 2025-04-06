@@ -1,12 +1,12 @@
 
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Plus, Trash, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Question {
   text: string;
@@ -17,6 +17,7 @@ interface Question {
 export default function TestConstructor({ courseId }: { courseId: number }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const addQuestion = () => {
     setQuestions([...questions, { text: "", options: ["", ""], correctAnswer: 0 }]);
@@ -43,12 +44,21 @@ export default function TestConstructor({ courseId }: { courseId: number }) {
   const createTestMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/courses/${courseId}/tests`, { questions });
+      if (!res.ok) {
+        throw new Error("Ошибка при создании теста");
+      }
       return res.json();
     },
     onSuccess: () => {
       toast({ title: "Тест успешно создан" });
       setQuestions([]);
       queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}/tests`] });
+    },
+    onError: () => {
+      toast({ 
+        title: "Ошибка при создании теста",
+        variant: "destructive"
+      });
     },
   });
 
@@ -117,6 +127,9 @@ export default function TestConstructor({ courseId }: { courseId: number }) {
           onClick={() => createTestMutation.mutate()} 
           disabled={createTestMutation.isPending}
         >
+          {createTestMutation.isPending && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
           Создать тест
         </Button>
       )}
