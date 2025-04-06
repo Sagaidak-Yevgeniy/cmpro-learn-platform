@@ -824,6 +824,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete enrollment endpoint
+  app.delete("/api/enrollments/:courseId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Необходима авторизация" });
+    }
+
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const userId = req.user.id;
+
+      // Get the course
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+
+      // Check if enrollment exists
+      const enrollment = await storage.getEnrollmentByUserAndCourse(userId, courseId);
+      if (!enrollment) {
+        return res.status(404).json({ message: "Запись на курс не найдена" });
+      }
+
+      // Delete enrollment
+      await storage.deleteEnrollment(enrollment.id);
+
+      // Update course student count
+      const currentEnrollments = await storage.getEnrollmentsByCourse(courseId);
+      const studentCount = currentEnrollments.length - 1;
+
+      await storage.updateCourse(courseId, {
+        ...course,
+        studentCount: Math.max(0, studentCount) // Ensure count doesn't go below 0
+      });
+
+      res.json({ message: "Успешно отписались от курса" });
+    } catch (error) {
+      console.error("Error in delete enrollment:", error);
+      res.status(500).json({ message: "Ошибка при отписке от курса" });
+    }
+  });
+
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) { return next(err); }
