@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Course } from "@shared/schema";
 import CreateCourseDialog from "./create-course-dialog";
-import { Settings } from "lucide-react"; // Assuming Lucide-React is used for the icon
 import { Calendar, MoreHorizontal, PlusCircle, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
