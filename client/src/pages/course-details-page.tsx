@@ -39,6 +39,13 @@ export default function CourseDetailsPage() {
     queryKey: [`/api/courses/${courseId}`],
   });
 
+  if (!course) {
+    return <div>Курс не найден</div>;
+  }
+
+  const isTeacher = user?.id === course.teacherId;
+  const isEnrolled = course.enrollments?.some(e => e.userId === user?.id);
+
   const { data: materials, isLoading: materialsLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}/materials`],
     enabled: !!isEnrolled,
@@ -54,13 +61,6 @@ export default function CourseDetailsPage() {
   if (isLoading) {
     return <div>Загрузка...</div>;
   }
-
-  if (!course) {
-    return <div>Курс не найден</div>;
-  }
-
-  const isTeacher = user?.id === course.teacherId;
-  const isEnrolled = course.enrollments?.some(e => e.userId === user?.id);
 
   return (
     <div className="container py-8">
