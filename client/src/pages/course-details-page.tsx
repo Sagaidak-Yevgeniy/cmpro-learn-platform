@@ -4,7 +4,6 @@ import { useParams, useSearch } from "wouter";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, User, CheckCircle, Loader2, Trash2, UserPlus, UserMinus, Plus } from "lucide-react";
-import TestConstructor from "@/components/teacher/test-constructor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
