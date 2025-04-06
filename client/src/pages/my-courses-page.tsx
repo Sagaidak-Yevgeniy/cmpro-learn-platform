@@ -88,7 +88,7 @@ export default function MyCoursesPage() {
                         </div>
                       </div>
                       <div className="flex space-x-3">
-                        <Link href={`/courses/${enrollment.course.id}`}>
+                        <Link href={`/courses/${enrollment.course.id}?tab=materials`}>
                           <Button variant="outline" size="sm">
                             <BookOpen className="h-4 w-4 mr-2" />
                             Материалы

@@ -210,6 +210,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         grade: null
       });
 
+      // Обновляем количество студентов в курсе
+      const updatedCourse = await storage.updateCourse(enrollmentData.courseId, {
+        ...course,
+        studentCount: (course.studentCount || 0) + 1
+      });
+
       res.status(201).json(enrollment);
     } catch (error) {
       if (error instanceof z.ZodError) {

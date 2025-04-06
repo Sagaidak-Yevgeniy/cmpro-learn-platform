@@ -35,9 +35,21 @@ export default function CourseDetailsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: course, isLoading } = useQuery({
+  const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
   });
+
+  const { data: materials, isLoading: materialsLoading } = useQuery({
+    queryKey: [`/api/courses/${courseId}/materials`],
+    enabled: !!isEnrolled,
+  });
+
+  const { data: assignments, isLoading: assignmentsLoading } = useQuery({
+    queryKey: [`/api/courses/${courseId}/assignments`],
+    enabled: !!isEnrolled,
+  });
+
+  const isLoading = courseLoading || materialsLoading || assignmentsLoading;
 
   if (isLoading) {
     return <div>Загрузка...</div>;
@@ -252,6 +264,62 @@ export default function CourseDetailsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {isEnrolled && (
+          <div className="mt-8 grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Материалы курса</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {materials?.length > 0 ? (
+                  <div className="space-y-4">
+                    {materials.map((material) => (
+                      <div key={material.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h3 className="font-medium">{material.title}</h3>
+                          <p className="text-sm text-gray-500">{material.description}</p>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          Открыть
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">Материалы пока не добавлены</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Задания</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {assignments?.length > 0 ? (
+                  <div className="space-y-4">
+                    {assignments.map((assignment) => (
+                      <div key={assignment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h3 className="font-medium">{assignment.title}</h3>
+                          <p className="text-sm text-gray-500">
+                            Срок сдачи: {format(new Date(assignment.dueDate), 'dd.MM.yyyy')}
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          Перейти к заданию
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">Задания пока не добавлены</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
