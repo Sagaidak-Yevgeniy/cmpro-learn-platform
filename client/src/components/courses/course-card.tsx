@@ -27,13 +27,13 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
   return (
     <Card className="group overflow-hidden bg-card hover:shadow-xl transition-all duration-300">
       <div className="relative h-48">
-        {course.image_url ? (
+        {course.imageUrl ? (
           <img 
-            src={`/uploads/${course.image_url}`}
+            src={`/uploads/${course.imageUrl}`}
             alt={course.title} 
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
             onError={(e) => {
-              e.currentTarget.src = '/placeholder-course.jpg';
+              e.currentTarget.src = 'uploads/placeholder-course.jpg';
             }}
           />
         ) : (

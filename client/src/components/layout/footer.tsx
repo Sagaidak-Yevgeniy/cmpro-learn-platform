@@ -52,7 +52,7 @@ export default function Footer() {
           </a>
         </div>
         <p className="mt-8 text-center text-base text-gray-500">
-          &copy; {new Date().getFullYear()}-{new Date().getFullYear() + 1} CodeMastersPRO. Все права защищены.
+          &copy; 2024-{new Date().getFullYear()} CodeMastersPRO. Все права защищены.
         </p>
       </div>
     </footer>
