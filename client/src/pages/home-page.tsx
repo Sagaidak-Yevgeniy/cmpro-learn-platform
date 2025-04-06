@@ -154,10 +154,13 @@ export default function HomePage() {
       {courses && courses.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">Популярные курсы</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Replaced CourseList with CourseCard mapping */}
-            {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...courses]
+              .sort((a, b) => (b.studentCount || 0) - (a.studentCount || 0))
+              .slice(0, 3)
+              .map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))}
           </div>
           <div className="flex justify-center mt-8">
             <Link href="/courses" className="no-underline">
