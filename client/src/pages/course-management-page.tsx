@@ -168,36 +168,88 @@ export default function CourseManagementPage() {
     const formData = new FormData(e.target);
 
     try {
+      const title = formData.get("title") as string;
+      const description = formData.get("description") as string;
+
+      if (!title || !description) {
+        toast({
+          title: "Ошибка",
+          description: "Заполните все обязательные поля",
+          variant: "destructive"
+        });
+        return;
+      }
+
       switch (contentType) {
-        case "lecture":
+        case "lecture": {
+          const videoUrl = formData.get("videoUrl") as string;
+          const duration = parseInt(formData.get("duration") as string);
+          const order = parseInt(formData.get("order") as string) || 0;
+
+          if (!videoUrl || isNaN(duration)) {
+            toast({
+              title: "Ошибка",
+              description: "Укажите корректную ссылку на видео и длительность",
+              variant: "destructive"
+            });
+            return;
+          }
+
           await addLectureMutation.mutateAsync({
-            title: formData.get("title"),
-            description: formData.get("description"),
-            videoUrl: formData.get("videoUrl"),
-            duration: parseInt(formData.get("duration") as string),
-            order: parseInt(formData.get("order") as string) || 0
+            title,
+            description,
+            videoUrl,
+            duration,
+            order
           });
           break;
+        }
+        case "material": {
+          const type = formData.get("type") as string;
+          const fileUrl = formData.get("fileUrl") as string;
+          const order = parseInt(formData.get("order") as string) || 0;
 
-        case "material":
+          if (!type || !fileUrl) {
+            toast({
+              title: "Ошибка",
+              description: "Укажите тип материала и ссылку на файл",
+              variant: "destructive"
+            });
+            return;
+          }
+
           await addMaterialMutation.mutateAsync({
-            title: formData.get("title"),
-            description: formData.get("description"),
-            type: formData.get("type"),
-            fileUrl: formData.get("fileUrl"),
-            order: parseInt(formData.get("order") as string) || 0
+            title,
+            description,
+            type,
+            fileUrl,
+            order
           });
           break;
+        }
+        case "test": {
+          const passingScore = parseInt(formData.get("passingScore") as string);
+          const timeLimit = parseInt(formData.get("timeLimit") as string);
+          const order = parseInt(formData.get("order") as string) || 0;
 
-        case "test":
+          if (isNaN(passingScore) || isNaN(timeLimit) || passingScore < 0 || passingScore > 100) {
+            toast({
+              title: "Ошибка",
+              description: "Укажите корректный проходной балл (0-100) и время на выполнение",
+              variant: "destructive"
+            });
+            return;
+          }
+
           await addTestMutation.mutateAsync({
-            title: formData.get("title"),
-            description: formData.get("description"),
-            passingScore: parseInt(formData.get("passingScore") as string),
-            timeLimit: parseInt(formData.get("timeLimit") as string),
-            order: parseInt(formData.get("order") as string) || 0
+            title,
+            description,
+            passingScore,
+            timeLimit,
+            order
           });
           break;
+        }
       }
 
       queryClient.invalidateQueries([`/api/courses/${courseId}`]);
@@ -210,7 +262,8 @@ export default function CourseManagementPage() {
         fileUrl: "",
         type: "",
         passingScore: "",
-        timeLimit: ""
+        timeLimit: "",
+        order: ""
       });
 
     } catch (error) {
