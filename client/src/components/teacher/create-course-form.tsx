@@ -42,6 +42,7 @@ const createCourseSchema = z.object({
   startDate: z.date({ required_error: "Выберите дату начала курса" }),
   endDate: z.date({ required_error: "Выберите дату окончания курса" }),
   imageUrl: z.string().nullable(),
+  imageFile: z.any().nullable(), // Added imageFile to the schema
   isActive: z.boolean().default(true),
 });
 
@@ -57,14 +58,16 @@ const formSchema = createCourseSchema.refine(
 type CreateCourseFormValues = z.infer<typeof formSchema>;
 
 interface CreateCourseFormProps {
-  onSuccess?: () => void;
+  onSuccess?: (data: CreateCourseFormValues & { imageFile?: File }) => void;
 }
 
 export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // Added state for selected file
+
+
   // Инициализация формы
   const form = useForm<CreateCourseFormValues>({
     resolver: zodResolver(formSchema),
@@ -76,20 +79,21 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
       startDate: new Date(),
       endDate: new Date(new Date().setMonth(new Date().getMonth() + 2)),
       imageUrl: null,
+      imageFile: null, // Added default value for imageFile
       isActive: true,
     },
   });
-  
+
   // Мутация для создания курса
   const createCourseMutation = useMutation({
     mutationFn: async (data: CreateCourseFormValues) => {
       console.log("Данные формы для создания курса:", data);
-      
+
       // Проверяем, что все обязательные поля заполнены
       if (!data.title || !data.description || !data.category || !data.duration || !data.startDate || !data.endDate) {
         throw new Error("Заполните все обязательные поля");
       }
-      
+
       // Преобразуем даты в строку ISO для корректной передачи на сервер
       const formattedData = {
         ...data,
@@ -97,9 +101,9 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
         endDate: data.endDate.toISOString(),
         teacherId: user?.id,
       };
-      
+
       console.log("Форматированные данные для отправки:", formattedData);
-      
+
       const res = await apiRequest("POST", "/api/courses", formattedData);
       if (!res.ok) {
         const errorData = await res.json();
@@ -115,8 +119,9 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
       });
       form.reset();
       setImagePreview(null);
+      setSelectedFile(null); // Reset selectedFile
       queryClient.invalidateQueries({ queryKey: ["/api/teacher/stats"] });
-      onSuccess?.();
+      onSuccess?.({});
     },
     onError: (error: Error) => {
       toast({
@@ -126,26 +131,22 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
       });
     },
   });
-  
+
   // Обработчик отправки формы
   const onSubmit = async (values: CreateCourseFormValues) => {
     try {
       const courseData = await createCourseMutation.mutateAsync(values);
-      if (selectedFile) {
-        onSuccess?.({ ...courseData, imageFile: selectedFile });
-      } else {
-        onSuccess?.(courseData);
-      }
+      onSuccess?.({ ...courseData, imageFile: selectedFile });
     } catch (error) {
       console.error("Ошибка при создании курса:", error);
     }
   };
-  
+
   // Обработчик загрузки изображения
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     // Проверка размера файла (макс. 1MB)
     if (file.size > 1024 * 1024) {
       toast({
@@ -155,21 +156,26 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
       });
       return;
     }
-    
+
     // В реальном приложении здесь должна быть загрузка на сервер
     // Сейчас просто покажем превью и сохраним имя файла как imageUrl
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target?.result as string);
       form.setValue("imageUrl", file.name); // В реальном приложении здесь будет URL
+      form.setValue("imageFile", file); //Added to store file object
+      setSelectedFile(file); //Update selectedFile state
     };
     reader.readAsDataURL(file);
   };
-  
+
   // Удаление изображения
   const removeImage = () => {
     setImagePreview(null);
     form.setValue("imageUrl", null);
+    form.setValue("imageFile", null); //Added to clear imageFile value
+    setSelectedFile(null); //Reset selectedFile state
+
   };
 
   return (
@@ -193,7 +199,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="category"
@@ -217,7 +223,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="duration"
@@ -234,7 +240,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="startDate"
@@ -274,7 +280,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="endDate"
@@ -305,8 +311,8 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => 
-                          date < new Date() || 
+                        disabled={(date) =>
+                          date < new Date() ||
                           (form.getValues("startDate") && date < form.getValues("startDate"))
                         }
                         initialFocus
@@ -317,7 +323,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 </FormItem>
               )}
             />
-          
+
             <FormField
               control={form.control}
               name="description"
@@ -325,10 +331,10 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 <FormItem className="sm:col-span-6">
                   <FormLabel>Описание курса</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      rows={5} 
+                    <Textarea
+                      rows={5}
                       placeholder="Подробное описание курса, его программа и результаты обучения"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
@@ -338,7 +344,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="imageUrl"
@@ -348,9 +354,9 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                   <div className="mt-1">
                     {imagePreview ? (
                       <div className="relative">
-                        <img 
-                          src={imagePreview?.startsWith('data:') ? imagePreview : `/images/${imagePreview}`} 
-                          alt="Preview" 
+                        <img
+                          src={imagePreview?.startsWith("data:") ? imagePreview : `/images/${imagePreview}`}
+                          alt="Preview"
                           className="object-cover rounded-md h-40 w-full sm:w-64"
                         />
                         <Button
@@ -370,13 +376,13 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                           <div className="flex text-sm text-gray-600">
                             <label htmlFor="course-image" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/90 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
                               <span>Загрузить изображение</span>
-                              <input 
-                                id="course-image" 
-                                name="course-image" 
-                                type="file" 
+                              <input
+                                id="course-image"
+                                name="course-image"
+                                type="file"
                                 accept="image/*"
-                                className="sr-only" 
-                                onChange={handleImageUpload} 
+                                className="sr-only"
+                                onChange={handleImageUpload}
                               />
                             </label>
                           </div>
@@ -394,7 +400,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="isActive"
@@ -416,7 +422,7 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
               )}
             />
           </div>
-          
+
           <div className="flex justify-end">
             <Button
               type="submit"

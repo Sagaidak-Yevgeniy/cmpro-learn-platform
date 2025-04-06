@@ -30,13 +30,13 @@ export default function CreateCourseDialog() {
           </DialogDescription>
         </DialogHeader>
         <CreateCourseForm 
-          onSuccess={async (data) => {
-            if (data.imageFile) {
-              const formData = new FormData();
-              formData.append("image", data.imageFile);
-              
-              try {
-                const response = await fetch(`/api/courses/${data.id}/image`, {
+          onSuccess={async (course) => {
+            try {
+              if (course.imageFile) {
+                const formData = new FormData();
+                formData.append("image", course.imageFile);
+                
+                const response = await fetch(`/api/courses/${course.id}/image`, {
                   method: "PUT",
                   body: formData,
                 });
@@ -44,11 +44,11 @@ export default function CreateCourseDialog() {
                 if (!response.ok) {
                   throw new Error("Ошибка при загрузке изображения");
                 }
-              } catch (error) {
-                console.error("Ошибка при загрузке изображения:", error);
               }
+              setOpen(false);
+            } catch (error) {
+              console.error("Ошибка при загрузке изображения:", error);
             }
-            setOpen(false);
           }} 
         />
       </DialogContent>
