@@ -153,9 +153,10 @@ export default function HomePage() {
       {/* Courses section */}
       {courses && courses.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">Популярные курсы</h2>
+          <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">Самые популярные курсы</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...courses]
+              .filter(course => (course.studentCount || 0) > 0)
               .sort((a, b) => (b.studentCount || 0) - (a.studentCount || 0))
               .slice(0, 3)
               .map((course) => (
