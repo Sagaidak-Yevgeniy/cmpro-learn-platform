@@ -166,6 +166,7 @@ export default function CourseDetailsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Преподаватель</CardTitle>
+              <CardDescription>{course.teacher?.name || "Преподаватель не указан"}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3">
