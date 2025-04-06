@@ -20,6 +20,12 @@ export default function CoursesPage() {
   const { data: courses, isLoading } = useQuery<Course[]>({
     queryKey: ["/api/courses"],
   });
+
+  const { user } = useAuth();
+  const { data: stats } = useQuery({
+    queryKey: ["api/student/stats"],
+    enabled: !!user && user.role === "student",
+  });
   
   const [searchParams] = useSearch();
   const initialCategory = (searchParams?.category as CategoryType) || "all";
@@ -90,7 +96,10 @@ export default function CoursesPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : filteredCourses && filteredCourses.length > 0 ? (
-        <CourseList courses={filteredCourses} />
+        <CourseList 
+          courses={filteredCourses} 
+          enrollments={stats?.courseData} 
+        />
       ) : (
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-gray-900">

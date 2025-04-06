@@ -8,10 +8,13 @@ import { format } from "date-fns";
 
 interface CourseCardProps {
   course: Course;
-  isTeacher?: boolean; // Added isTeacher prop
+  isTeacher?: boolean;
+  enrollment?: {
+    progress: number;
+  };
 }
 
-export default function CourseCard({ course, isTeacher }: CourseCardProps) {
+export default function CourseCard({ course, isTeacher, enrollment }: CourseCardProps) {
   const categoryColors: Record<string, string> = {
     programming: "bg-blue-500/10 text-blue-700 border-blue-200",
     business: "bg-amber-500/10 text-amber-700 border-amber-200",
@@ -46,6 +49,11 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
             {course.category}
           </Badge>
           {isActive && <Badge variant="success">Активный</Badge>}
+          {enrollment && (
+            <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 border-blue-200">
+              Прогресс: {enrollment.progress}%
+            </Badge>
+          )}
         </div>
       </div>
 
