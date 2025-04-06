@@ -1,11 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, User, CheckCircle, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import UploadMaterialForm from "@/components/teacher/upload-material-form";
 import AssignmentsManager from "@/components/teacher/assignments-manager";
 import TestConstructor from "@/components/teacher/test-constructor";
@@ -13,8 +14,7 @@ import CourseFeedback from "@/components/courses/course-feedback";
 import CourseChat from "@/components/chat/course-chat";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function CourseDetailsPage() {
   const { id } = useParams();
@@ -23,35 +23,49 @@ export default function CourseDetailsPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: course } = useQuery({
+  const { data: course, isLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
   });
 
-  if (!course) {
+  const enrollMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/courses/${courseId}/enroll`);
+      if (!response.ok) {
+        throw new Error("Ошибка при записи на курс");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Вы записались на курс",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось записаться на курс",
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (isLoading) {
     return <div>Загрузка...</div>;
+  }
+
+  if (!course) {
+    return <div>Курс не найден</div>;
   }
 
   const isTeacher = user?.role === "teacher" && user?.id === course.teacherId;
   const isStudent = user?.role === "student";
+  const isEnrolled = course.enrollments?.some(e => e.userId === user?.id);
 
-  const downloadMaterial = async (materialId: number) => {
-    try {
-      const response = await apiRequest("GET", `/api/materials/${materialId}/download`);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = "material.txt"; // Simplified download name
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch(error) {
-      console.error("Error downloading material:", error);
-      toast({ title: "Ошибка загрузки материала", description: "Пожалуйста, попробуйте позже", variant: "destructive" });
-    }
+  const handleEnroll = () => {
+    enrollMutation.mutate();
   };
-
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -61,6 +75,18 @@ export default function CourseDetailsPage() {
             {course.category}
           </span>
           <h1 className="text-2xl font-bold text-white">{course.title}</h1>
+          {isStudent && !isEnrolled && (
+            <Button 
+              onClick={handleEnroll} 
+              className="mt-4"
+              disabled={enrollMutation.isPending}
+            >
+              {enrollMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Записаться на курс
+            </Button>
+          )}
         </div>
       </div>
 
@@ -88,18 +114,29 @@ export default function CourseDetailsPage() {
         </Card>
 
         {isTeacher ? (
-          <Tabs defaultValue="materials" className="space-y-6">
+          <Tabs defaultValue="overview" className="space-y-6">
             <TabsList>
+              <TabsTrigger value="overview">Обзор</TabsTrigger>
               <TabsTrigger value="materials">Материалы</TabsTrigger>
               <TabsTrigger value="assignments">Задания</TabsTrigger>
               <TabsTrigger value="tests">Тесты</TabsTrigger>
+              <TabsTrigger value="students">Студенты</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="overview">
+              <Card>
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Управление курсом</h2>
+                  {/* Здесь можно добавить редактирование основной информации курса */}
+                </div>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="materials">
               <Card>
                 <div className="p-6">
                   <h2 className="text-xl font-semibold mb-4">Управление материалами</h2>
-                  <UploadMaterialForm courses={[course]} />
+                  <UploadMaterialForm courseId={courseId} />
                 </div>
               </Card>
             </TabsContent>
@@ -121,115 +158,129 @@ export default function CourseDetailsPage() {
                 </div>
               </Card>
             </TabsContent>
+
+            <TabsContent value="students">
+              <Card>
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold mb-4">Управление студентами</h2>
+                  {course.enrollments && course.enrollments.length > 0 ? (
+                    <div className="divide-y divide-gray-200">
+                      {course.enrollments.map((enrollment) => (
+                        <div key={enrollment.id} className="py-4">
+                          <p>{enrollment.user?.name}</p>
+                          <p className="text-sm text-gray-500">{enrollment.user?.email}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">На курс пока никто не записался</p>
+                  )}
+                </div>
+              </Card>
+            </TabsContent>
           </Tabs>
         ) : (
-          <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="p-6">
-            <TabsList className="mb-6">
+          <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList>
               <TabsTrigger value="overview">Обзор</TabsTrigger>
+              {isEnrolled && (
+                <>
+                  <TabsTrigger value="materials">Материалы</TabsTrigger>
+                  <TabsTrigger value="assignments">Задания</TabsTrigger>
+                  <TabsTrigger value="chat">Чат</TabsTrigger>
+                </>
+              )}
               <TabsTrigger value="feedback">Отзывы</TabsTrigger>
-              <TabsTrigger value="materials">Материалы</TabsTrigger>
-              <TabsTrigger value="assignments">Задания</TabsTrigger>
-              <TabsTrigger value="chat">Чат</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview">
-              <div>
-                <h2 className="text-xl font-bold mb-3">Описание курса</h2>
-                <p className="text-gray-700 whitespace-pre-line">{course.description}</p>
-              </div>
+              <Card>
+                <div className="p-6">
+                  <h2 className="text-xl font-bold mb-3">О курсе</h2>
+                  <p className="text-gray-700 whitespace-pre-line">{course.description}</p>
+                </div>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="materials" className="space-y-6">
-                <h2 className="text-xl font-bold mb-3">Учебные материалы</h2>
-                {course.materials && course.materials.length > 0 ? (
-                  <div className="grid gap-4">
-                    {course.materials.map((material) => (
-                      <Card key={material.id}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium">{material.title}</h3>
-                              {material.description && (
-                                <p className="text-sm text-gray-500 mt-1">{material.description}</p>
-                              )}
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mt-2">
-                                {material.type}
-                              </span>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => window.open(material.url, '_blank')}
-                              >
-                                Открыть
-                              </Button>
-                              <Button 
-                                variant="secondary" 
-                                size="sm"
-                                onClick={() => downloadMaterial(material.id)}
-                              >
-                                Скачать
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">
-                    На данный момент нет доступных материалов для этого курса.
-                  </p>
-                )}
-            </TabsContent>
-
-            <TabsContent value="assignments" className="space-y-6">
+            {isEnrolled && (
               <>
-                <h2 className="text-xl font-bold mb-3">Задания</h2>
-                {course.assignments && course.assignments.length > 0 ? (
-                  <div className="grid gap-4">
-                    {course.assignments.map((assignment) => (
-                      <Card key={assignment.id}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium">{assignment.title}</h3>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {assignment.description.length > 100 
-                                  ? `${assignment.description.slice(0, 100)}...` 
-                                  : assignment.description}
-                              </p>
-                              <div className="flex items-center mt-2 text-sm text-orange-700">
-                                <Calendar className="h-4 w-4 mr-1" />
-                                <span>
-                                  Срок сдачи: {format(new Date(assignment.dueDate), 'dd.MM.yyyy')}
-                                </span>
-                              </div>
-                            </div>
-                            <Button variant="outline" size="sm">Открыть</Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">
-                    На данный момент нет доступных заданий для этого курса.
-                  </p>
-                )}
-              </>
-            </TabsContent>
+                <TabsContent value="materials">
+                  <Card>
+                    <div className="p-6">
+                      <h2 className="text-xl font-bold mb-3">Учебные материалы</h2>
+                      {course.materials && course.materials.length > 0 ? (
+                        <div className="space-y-4">
+                          {course.materials.map((material) => (
+                            <Card key={material.id}>
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h3 className="font-medium">{material.title}</h3>
+                                    <p className="text-sm text-gray-500">{material.description}</p>
+                                  </div>
+                                  <Button onClick={() => window.open(material.url, '_blank')}>
+                                    Открыть
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">Материалы пока не добавлены</p>
+                      )}
+                    </div>
+                  </Card>
+                </TabsContent>
 
-            <TabsContent value="feedback" className="space-y-6">
-              <CourseFeedback courseId={courseId} isEnrolled={true} />
-            </TabsContent>
+                <TabsContent value="assignments">
+                  <Card>
+                    <div className="p-6">
+                      <h2 className="text-xl font-bold mb-3">Задания</h2>
+                      {course.assignments && course.assignments.length > 0 ? (
+                        <div className="space-y-4">
+                          {course.assignments.map((assignment) => (
+                            <Card key={assignment.id}>
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h3 className="font-medium">{assignment.title}</h3>
+                                    <p className="text-sm text-gray-500">{assignment.description}</p>
+                                    <p className="text-sm text-orange-600 mt-2">
+                                      Срок сдачи: {format(new Date(assignment.dueDate), 'dd.MM.yyyy')}
+                                    </p>
+                                  </div>
+                                  <Button variant="outline">Открыть задание</Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">Заданий пока нет</p>
+                      )}
+                    </div>
+                  </Card>
+                </TabsContent>
 
-            <TabsContent value="chat" className="space-y-6">
-              <>
-                <h2 className="text-xl font-bold mb-3">Чат курса</h2>
-                <CourseChat courseId={courseId} />
+                <TabsContent value="chat">
+                  <Card>
+                    <div className="p-6">
+                      <h2 className="text-xl font-bold mb-3">Чат курса</h2>
+                      <CourseChat courseId={courseId} />
+                    </div>
+                  </Card>
+                </TabsContent>
               </>
+            )}
+
+            <TabsContent value="feedback">
+              <Card>
+                <div className="p-6">
+                  <h2 className="text-xl font-bold mb-3">Отзывы о курсе</h2>
+                  <CourseFeedback courseId={courseId} isEnrolled={isEnrolled} />
+                </div>
+              </Card>
             </TabsContent>
           </Tabs>
         )}

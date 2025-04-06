@@ -28,7 +28,7 @@ interface AssignmentsManagerProps {
 
 export default function AssignmentsManager({ courseId }: AssignmentsManagerProps) {
   const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
-  
+
   useEffect(() => {
     const checkNewSubmissions = async () => {
       try {
@@ -41,10 +41,10 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
         console.error('Ошибка проверки новых работ:', error);
       }
     };
-    
+
     checkNewSubmissions();
     const interval = setInterval(checkNewSubmissions, 60000); // Проверка каждую минуту
-    
+
     return () => clearInterval(interval);
   }, [courseId]);
   const { toast } = useToast();
@@ -54,7 +54,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
   const [grade, setGrade] = useState<number | null>(null);
   const [feedback, setFeedback] = useState("");
   const [createAssignmentDialogOpen, setCreateAssignmentDialogOpen] = useState(false);
-  
+
   // Запрос для получения заданий курса
   const assignmentsQuery = useQuery<Assignment[]>({
     queryKey: ["/api/assignments", courseId],
@@ -65,7 +65,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
     },
     enabled: Boolean(courseId),
   });
-  
+
   // Запрос для получения работ по выбранному заданию
   const submissionsQuery = useQuery<Submission[]>({
     queryKey: ["/api/submissions", selectedAssignment?.id],
@@ -76,7 +76,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
     },
     enabled: Boolean(selectedAssignment),
   });
-  
+
   // Мутация для обновления оценки и отзыва
   const gradeSubmissionMutation = useMutation({
     mutationFn: async ({ submissionId, grade, feedback }: { submissionId: number, grade: number, feedback: string }) => {
@@ -103,18 +103,18 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
       });
     },
   });
-  
+
   // Обработчик отправки оценки
   const handleGradeSubmit = () => {
     if (!selectedSubmission || grade === null) return;
-    
+
     gradeSubmissionMutation.mutate({
       submissionId: selectedSubmission.id,
       grade,
       feedback
     });
   };
-  
+
   // Открытие диалога оценки
   const openGradeDialog = (submission: Submission) => {
     setSelectedSubmission(submission);
@@ -122,27 +122,27 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
     setFeedback(submission.feedback || "");
     setGradeDialogOpen(true);
   };
-  
+
   const handleCloseCreateDialog = (created: boolean) => {
     if (created) {
       queryClient.invalidateQueries({ queryKey: ["/api/assignments", courseId] });
     }
     setCreateAssignmentDialogOpen(false);
   };
-  
+
   // Расчет процента проверенных работ
   const getSubmissionStats = () => {
     if (!submissionsQuery.data) return { total: 0, graded: 0, percent: 0 };
-    
+
     const total = submissionsQuery.data.length;
     const graded = submissionsQuery.data.filter(sub => sub.grade !== null).length;
     const percent = total > 0 ? Math.round((graded / total) * 100) : 0;
-    
+
     return { total, graded, percent };
   };
-  
+
   const submissionStats = getSubmissionStats();
-  
+
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('ru-RU', {
@@ -163,7 +163,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
           Создать задание
         </Button>
       </div>
-      
+
       {/* Диалог создания задания */}
       <Dialog open={createAssignmentDialogOpen} onOpenChange={setCreateAssignmentDialogOpen}>
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
@@ -178,7 +178,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
           }
         </DialogContent>
       </Dialog>
-      
+
       {/* Список заданий */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {assignmentsQuery.isLoading ? (
@@ -221,7 +221,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
           ))
         )}
       </div>
-      
+
       {/* Просмотр работ по выбранному заданию */}
       {selectedAssignment && (
         <Card className="mt-8">
@@ -255,14 +255,14 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
                 </div>
               </div>
             </div>
-            
+
             <Tabs defaultValue="pending">
               <TabsList className="mb-4">
                 <TabsTrigger value="all">Все работы</TabsTrigger>
                 <TabsTrigger value="pending">Ожидают проверки</TabsTrigger>
                 <TabsTrigger value="graded">Проверенные</TabsTrigger>
               </TabsList>
-              
+
               {submissionsQuery.isLoading ? (
                 <div className="flex justify-center p-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -287,7 +287,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
                       />
                     </ScrollArea>
                   </TabsContent>
-                  
+
                   <TabsContent value="pending">
                     <ScrollArea className="h-[400px]">
                       <SubmissionList 
@@ -296,7 +296,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
                       />
                     </ScrollArea>
                   </TabsContent>
-                  
+
                   <TabsContent value="graded">
                     <ScrollArea className="h-[400px]">
                       <SubmissionList 
@@ -311,7 +311,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
           </CardContent>
         </Card>
       )}
-      
+
       {/* Диалог выставления оценки */}
       <Dialog open={gradeDialogOpen} onOpenChange={setGradeDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -321,7 +321,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
               Оцените работу и оставьте комментарий для студента.
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedSubmission && (
             <>
               <div className="space-y-4">
@@ -331,7 +331,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
                     <pre className="whitespace-pre-wrap text-sm">{selectedSubmission.content}</pre>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="grade">Оценка (от 0 до 100)</Label>
                   <Input
@@ -343,7 +343,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
                     onChange={(e) => setGrade(parseInt(e.target.value) || 0)}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="feedback">Комментарий к работе</Label>
                   <Textarea
@@ -355,7 +355,7 @@ export default function AssignmentsManager({ courseId }: AssignmentsManagerProps
                   />
                 </div>
               </div>
-              
+
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setGradeDialogOpen(false)}>
                   Отмена
@@ -395,7 +395,7 @@ function SubmissionList({ submissions, onGrade }: SubmissionListProps) {
       minute: '2-digit'
     }).format(date);
   };
-  
+
   if (submissions.length === 0) {
     return (
       <div className="text-center p-8 text-gray-500">
@@ -403,7 +403,7 @@ function SubmissionList({ submissions, onGrade }: SubmissionListProps) {
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-4">
       {submissions.map((submission) => (
