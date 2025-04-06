@@ -34,6 +34,8 @@ export default function CourseDetailsPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [createTestDialogOpen, setCreateTestDialogOpen] = useState(false);
   const [selectedTest, setSelectedTest] = useState<number | null>(null);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [editInfoDialogOpen, setEditInfoDialogOpen] = useState(false);
 
   const { data: course, isLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
@@ -106,6 +108,44 @@ export default function CourseDetailsPage() {
       toast({
         title: "Ошибка",
         description: "Не удалось удалить тест",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateCourseInfo = async (data: any) => {
+    try {
+      const response = await apiRequest("PATCH", `/api/courses/${courseId}`, data);
+      if (!response.ok) throw new Error("Failed to update course info");
+      queryClient.invalidateQueries([`/api/courses/${courseId}`]);
+      toast({
+        title: "Успешно",
+        description: "Информация о курсе обновлена"
+      });
+      setEditInfoDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось обновить информацию о курсе",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleInviteStudents = async (emails: string[]) => {
+    try {
+      const response = await apiRequest("POST", `/api/courses/${courseId}/invite`, { emails });
+      if (!response.ok) throw new Error("Failed to invite students");
+      queryClient.invalidateQueries([`/api/courses/${courseId}`]);
+      toast({
+        title: "Успешно",
+        description: "Приглашения отправлены"
+      });
+      setInviteDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось отправить приглашения",
         variant: "destructive"
       });
     }
