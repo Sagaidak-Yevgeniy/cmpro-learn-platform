@@ -1,20 +1,17 @@
-
 import { useState } from "react";
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Card,
   CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -23,35 +20,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ChevronLeft,
-  Pencil,
-  Trash,
-  Upload,
-  FileText,
-  User,
   Plus,
   Video,
-  BookOpen,
-  ClipboardCheck,
+  FileText,
+  Book,
+  TestTube,
+  Users,
+  Settings,
+  Trash,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
+
 
 export default function CourseManagementPage() {
   const { id } = useParams();
   const courseId = parseInt(id || "0");
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("materials");
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
+  const [isAddingLecture, setIsAddingLecture] = useState(false);
+  const [isAddingTest, setIsAddingTest] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editedCourse, setEditedCourse] = useState(null);
@@ -94,11 +91,11 @@ export default function CourseManagementPage() {
   });
 
   if (isLoading) {
-    return <div>Загрузка...</div>;
-  }
-
-  if (!course) {
-    return <div>Курс не найден</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const handleUpdateCourse = () => {
@@ -160,228 +157,335 @@ export default function CourseManagementPage() {
     </Dialog>
   );
 
+
   return (
-    <div className="container py-8">
-      <div className="flex items-center justify-between mb-6">
-        <Button variant="ghost" onClick={() => window.history.back()}>
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          Назад
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => {
-            setEditMode(true);
-            setEditedCourse({...course});
-          }}>
-            <Pencil className="h-4 w-4 mr-2" />
-            Редактировать
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex items-center gap-4 mb-8">
+        <Link href="/teacher">
+          <Button variant="ghost" size="sm">
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Назад
           </Button>
-          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-            <Trash className="h-4 w-4 mr-2" />
-            Удалить курс
-          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold">{course?.title}</h1>
+          <p className="text-gray-500">Панель управления курсом</p>
         </div>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>{course.title}</CardTitle>
-          <CardDescription>Управление курсом | {course.enrollments?.length || 0} студентов</CardDescription>
-        </CardHeader>
-      </Card>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full">
-          <TabsTrigger value="lectures">Лекции</TabsTrigger>
-          <TabsTrigger value="materials">Материалы</TabsTrigger>
-          <TabsTrigger value="assignments">Задания</TabsTrigger>
-          <TabsTrigger value="tests">Тесты</TabsTrigger>
-          <TabsTrigger value="students">Студенты</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="lectures">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Лекции курса</CardTitle>
-                <Button onClick={() => {
-                  setContentType("lecture");
-                  setAddContentDialog(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Добавить лекцию
-                </Button>
-              </div>
+              <CardTitle>Статистика курса</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[400px]">
-                {course.lectures?.map((lecture) => (
-                  <div key={lecture.id} className="flex items-center justify-between p-4 border-b">
-                    <div className="flex items-center gap-3">
-                      <Video className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium">{lecture.title}</p>
-                        <p className="text-sm text-gray-500">{lecture.duration} минут</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Редактировать
-                      </Button>
-                      <Button variant="destructive" size="sm">
-                        <Trash className="h-4 w-4 mr-2" />
-                        Удалить
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
+            <CardContent className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <p className="text-2xl font-bold">{course?.students?.length || 0}</p>
+                <p className="text-sm text-gray-500">Студентов</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-2xl font-bold">{course?.materials?.length || 0}</p>
+                <p className="text-sm text-gray-500">Материалов</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-2xl font-bold">{course?.assignments?.length || 0}</p>
+                <p className="text-sm text-gray-500">Заданий</p>
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="materials">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Материалы курса</CardTitle>
-                <Button onClick={() => {
-                  setContentType("material");
-                  setAddContentDialog(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Добавить материал
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[400px]">
-                {course.materials?.map((material) => (
-                  <div key={material.id} className="flex items-center justify-between p-4 border-b">
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium">{material.title}</p>
-                        <p className="text-sm text-gray-500">{material.type}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Редактировать</Button>
-                      <Button variant="destructive" size="sm">Удалить</Button>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-5 gap-4">
+              <TabsTrigger value="overview">Обзор</TabsTrigger>
+              <TabsTrigger value="lectures">Лекции</TabsTrigger>
+              <TabsTrigger value="materials">Материалы</TabsTrigger>
+              <TabsTrigger value="tests">Тесты</TabsTrigger>
+              <TabsTrigger value="students">Студенты</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="assignments">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Задания</CardTitle>
-                <Button onClick={() => {
-                  setContentType("assignment");
-                  setAddContentDialog(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Создать задание
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[400px]">
-                {course.assignments?.map((assignment) => (
-                  <div key={assignment.id} className="flex items-center justify-between p-4 border-b">
+            <TabsContent value="overview" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>О курсе</CardTitle>
+                  <CardDescription>Основная информация о курсе</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
                     <div>
-                      <p className="font-medium">{assignment.title}</p>
-                      <p className="text-sm text-gray-500">
-                        Срок сдачи: {format(new Date(assignment.dueDate), 'dd MMM yyyy', { locale: ru })}
-                      </p>
+                      <label className="text-sm font-medium">Описание курса</label>
+                      <p className="mt-1 text-gray-600">{course?.description}</p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <ClipboardCheck className="h-4 w-4 mr-2" />
-                        Проверить работы
-                      </Button>
-                      <Button variant="destructive" size="sm">Удалить</Button>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="tests">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Тесты</CardTitle>
-                <Button onClick={() => {
-                  setContentType("test");
-                  setAddContentDialog(true);
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Создать тест
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[400px]">
-                {course.tests?.map((test) => (
-                  <div key={test.id} className="flex items-center justify-between p-4 border-b">
                     <div>
-                      <p className="font-medium">{test.title}</p>
-                      <p className="text-sm text-gray-500">
-                        Проходной балл: {test.passingScore}%
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Статистика</Button>
-                      <Button variant="destructive" size="sm">Удалить</Button>
+                      <label className="text-sm font-medium">Прогресс курса</label>
+                      <Progress value={65} className="mt-2" />
+                      <p className="text-sm text-gray-500 mt-1">65% материалов загружено</p>
                     </div>
                   </div>
-                ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        <TabsContent value="students">
+            <TabsContent value="lectures" className="mt-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Видеолекции</CardTitle>
+                    <CardDescription>Управление видеолекциями курса</CardDescription>
+                  </div>
+                  <Button onClick={() => {
+                    setContentType("lecture");
+                    setAddContentDialog(true);
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добавить лекцию
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {course?.lectures?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Video className="h-12 w-12 mx-auto text-gray-400" />
+                      <p className="mt-4 text-gray-500">Лекции пока не добавлены</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[400px]">
+                      {course.lectures?.map((lecture) => (
+                        <div key={lecture.id} className="flex items-center justify-between p-4 border-b">
+                          <div className="flex items-center gap-3">
+                            <Video className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="font-medium">{lecture.title}</p>
+                              <p className="text-sm text-gray-500">{lecture.duration} минут</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Редактировать
+                            </Button>
+                            <Button variant="destructive" size="sm">
+                              <Trash className="h-4 w-4 mr-2" />
+                              Удалить
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="materials" className="mt-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Материалы курса</CardTitle>
+                  <Button onClick={() => {
+                    setContentType("material");
+                    setAddContentDialog(true);
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добавить материал
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {course?.materials?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 mx-auto text-gray-400" />
+                      <p className="mt-4 text-gray-500">Материалы пока не добавлены</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[400px]">
+                      {course.materials?.map((material) => (
+                        <div key={material.id} className="flex items-center justify-between p-4 border-b">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="font-medium">{material.title}</p>
+                              <p className="text-sm text-gray-500">{material.type}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">Редактировать</Button>
+                            <Button variant="destructive" size="sm">Удалить</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="assignments" className="mt-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Задания</CardTitle>
+                  <Button onClick={() => {
+                    setContentType("assignment");
+                    setAddContentDialog(true);
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Создать задание
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {course?.assignments?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Book className="h-12 w-12 mx-auto text-gray-400" />
+                      <p className="mt-4 text-gray-500">Задания пока не добавлены</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[400px]">
+                      {course.assignments?.map((assignment) => (
+                        <div key={assignment.id} className="flex items-center justify-between p-4 border-b">
+                          <div>
+                            <p className="font-medium">{assignment.title}</p>
+                            <p className="text-sm text-gray-500">
+                              Срок сдачи: {format(new Date(assignment.dueDate), 'dd MMM yyyy', { locale: ru })}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              <ClipboardCheck className="h-4 w-4 mr-2" />
+                              Проверить работы
+                            </Button>
+                            <Button variant="destructive" size="sm">Удалить</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="tests" className="mt-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Тесты</CardTitle>
+                  <Button onClick={() => {
+                    setContentType("test");
+                    setAddContentDialog(true);
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Создать тест
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {course?.tests?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <TestTube className="h-12 w-12 mx-auto text-gray-400" />
+                      <p className="mt-4 text-gray-500">Тесты пока не добавлены</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[400px]">
+                      {course.tests?.map((test) => (
+                        <div key={test.id} className="flex items-center justify-between p-4 border-b">
+                          <div>
+                            <p className="font-medium">{test.title}</p>
+                            <p className="text-sm text-gray-500">
+                              Проходной балл: {test.passingScore}%
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">Статистика</Button>
+                            <Button variant="destructive" size="sm">Удалить</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="students" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Студенты курса</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {course?.enrollments?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 mx-auto text-gray-400" />
+                      <p className="mt-4 text-gray-500">Студенты пока не зарегистрированы</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[400px]">
+                      {course.enrollments?.map((enrollment) => (
+                        <div key={enrollment.id} className="flex items-center justify-between p-4 border-b">
+                          <div className="flex items-center gap-3">
+                            <User className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="font-medium">{enrollment.user?.name}</p>
+                              <p className="text-sm text-gray-500">{enrollment.user?.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <p className="text-sm font-medium">Прогресс</p>
+                              <Progress value={enrollment.progress || 0} className="w-24" />
+                            </div>
+                            <Button variant="destructive" size="sm">Отчислить</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Студенты курса</CardTitle>
+              <CardTitle>Быстрые действия</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[400px]">
-                {course.enrollments?.map((enrollment) => (
-                  <div key={enrollment.id} className="flex items-center justify-between p-4 border-b">
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium">{enrollment.user?.name}</p>
-                        <p className="text-sm text-gray-500">{enrollment.user?.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <p className="text-sm font-medium">Прогресс</p>
-                        <Progress value={enrollment.progress || 0} className="w-24" />
-                      </div>
-                      <Button variant="destructive" size="sm">Отчислить</Button>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
+            <CardContent className="space-y-4">
+              <Button className="w-full" onClick={() => {
+                setContentType("material");
+                setAddContentDialog(true);
+              }}>
+                <FileText className="h-4 w-4 mr-2" />
+                Добавить материал
+              </Button>
+              <Button className="w-full" onClick={() => {
+                setContentType("lecture");
+                setAddContentDialog(true);
+              }}>
+                <Video className="h-4 w-4 mr-2" />
+                Добавить лекцию
+              </Button>
+              <Button className="w-full" onClick={() => {
+                setContentType("test");
+                setAddContentDialog(true);
+              }}>
+                <TestTube className="h-4 w-4 mr-2" />
+                Создать тест
+              </Button>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
 
+          <Card>
+            <CardHeader>
+              <CardTitle>Настройки курса</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full" onClick={() => {
+                setEditMode(true);
+                setEditedCourse({...course});
+              }}>
+                <Settings className="h-4 w-4 mr-2" />
+                Редактировать курс
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
       <ContentDialog />
-
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Course } from "@shared/schema";
 import CreateCourseDialog from "./create-course-dialog";
+import { Settings } from "lucide-react"; // Assuming Lucide-React is used for the icon
+
 
 interface TeacherCourseListProps {
   courses: Course[];
@@ -15,9 +17,14 @@ const CourseCard = ({ course }: { course: Course }) => (
     <p>Start Date: {format(new Date(course.startDate), 'dd.MM.yyyy')}</p>
     <p>End Date: {format(new Date(course.endDate), 'dd.MM.yyyy')}</p>
     <p>Students: {course.studentCount}</p>
-    <Link href={`/teacher/courses/${course.id}`}>
-      <Button variant="link">Управление курсом</Button>
-    </Link>
+    <Link href={`/courses/${course.id}/manage`}>
+                <Button 
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary/90"
+                >
+                  <Settings className="h-4 w-4" />
+                  Управление курсом
+                </Button>
+              </Link>
   </div>
 );
 
