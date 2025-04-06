@@ -72,7 +72,7 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
               </Button>
             </Link>
             {isTeacher && (
-              <Link href={`/courses/${course.id}?manage=true`}>
+              <Link href={`/courses/${course.id}/manage`}>
                 <Button variant="default">
                   Управление курсом
                 </Button>

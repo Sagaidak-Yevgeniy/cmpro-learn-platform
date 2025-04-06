@@ -23,6 +23,7 @@ function Router() {
         <Route path="/reset-password" component={ResetPasswordPage} />
           <Route path="/courses" component={CoursesPage} />
           <Route path="/courses/:id" component={CourseDetailsPage} />
+          <ProtectedRoute path="/courses/:id/manage" component={CourseManagementPage} />
           <ProtectedRoute path="/my-courses" component={MyCoursesPage} />
           <ProtectedRoute path="/teacher" component={TeacherDashboard} />
           <ProtectedRoute path="/teacher/courses/:id" component={TeacherDashboard} />
