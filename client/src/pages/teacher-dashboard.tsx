@@ -176,9 +176,9 @@ export default function TeacherDashboard() {
               {stats.courses.map((course) => (
                 <div key={course.id} className="group bg-white overflow-hidden rounded-xl border shadow-sm transition-all hover:shadow-lg">
                   <div className="relative h-48">
-                    {course.imageUrl ? (
+                    {course.image_url ? (
                       <img 
-                        src={`/uploads/${course.imageUrl}`}
+                        src={`/uploads/${course.image_url}`}
                         alt={course.title} 
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                         onError={(e) => {

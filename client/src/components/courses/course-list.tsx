@@ -12,10 +12,7 @@ export default function CourseList({ courses }: CourseListProps) {
       {courses.map((course) => (
         <CourseCard 
           key={course.id} 
-          course={{
-            ...course,
-            imageUrl: course.imageUrl || undefined
-          }} 
+          course={course} 
         />
       ))}
     </div>
