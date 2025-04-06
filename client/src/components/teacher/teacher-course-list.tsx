@@ -20,7 +20,7 @@ const CourseCard = ({ course }: { course: Course }) => (
     <p>End Date: {format(new Date(course.endDate), 'dd.MM.yyyy')}</p>
     <p>Students: {course.studentCount}</p>
     <Button 
-              onClick={() => window.location.href = `/course-management/${course.id}`}
+              onClick={() => window.location.href = `/courses/${course.id}/manage`}
               className="w-full flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary/90"
             >
               <Settings className="h-4 w-4" />
