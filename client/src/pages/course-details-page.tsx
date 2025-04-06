@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -32,6 +33,7 @@ export default function CourseDetailsPage() {
   const { id } = useParams();
   const courseId = parseInt(id || "0");
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const { data: course, isLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}`],
@@ -206,7 +208,43 @@ export default function CourseDetailsPage() {
                   </Button>
                 </>
               ) : (
-                <Button className="w-full">
+                <Button 
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/enrollments', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          courseId: courseId
+                        })
+                      });
+
+                      if (response.ok) {
+                        toast({
+                          title: "Успешно!",
+                          description: "Вы записались на курс",
+                        });
+                        window.location.href = '/my-courses';
+                      } else {
+                        const error = await response.json();
+                        toast({
+                          variant: "destructive",
+                          title: "Ошибка",
+                          description: error.message || "Не удалось записаться на курс",
+                        });
+                      }
+                    } catch (error) {
+                      toast({
+                        variant: "destructive",
+                        title: "Ошибка",
+                        description: "Не удалось записаться на курс",
+                      });
+                    }
+                  }}
+                >
                   Записаться на курс
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
