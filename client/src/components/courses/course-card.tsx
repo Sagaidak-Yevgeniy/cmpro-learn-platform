@@ -72,12 +72,11 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
               </Button>
             </Link>
             {isTeacher && (
-              <Button 
-                variant="default"
-                onClick={() => window.location.href = `/courses/${course.id}?manage=true`}
-              >
-                Управление курсом
-              </Button>
+              <Link href={`/courses/${course.id}?manage=true`}>
+                <Button variant="default">
+                  Управление курсом
+                </Button>
+              </Link>
             )}
           </div>
         </div>
