@@ -425,4 +425,4 @@ export class MemStorage implements IStorage {
 }
 
 // Используем реализацию для работы с PostgreSQL
-export const storage = new DatabaseStorage();
+export const storage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();
