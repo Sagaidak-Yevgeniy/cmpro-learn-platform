@@ -239,7 +239,67 @@ export default function CourseDetailsPage() {
             </CardContent>
           </Card>
 
-          
+          {!isTeacher && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Действия</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isEnrolled ? (
+                  <>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Badge variant="success" className="py-1 px-3">Вы учитесь на этом курсе</Badge>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium mb-2">Ваш прогресс</p>
+                      <Progress value={45} className="h-2" />
+                      <p className="text-sm text-gray-500 mt-1">45% выполнено</p>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <Button className="w-full">
+                        Продолжить обучение
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        className="w-full"
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`/api/enrollments/${courseId}`, {
+                              method: 'DELETE'
+                            });
+                            if (response.ok) {
+                              toast({
+                                title: "Успешно",
+                                description: "Вы покинули курс",
+                              });
+                              window.location.href = '/my-courses';
+                            }
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Ошибка",
+                              description: "Не удалось покинуть курс",
+                            });
+                          }
+                        }}
+                      >
+                        Покинуть курс
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <Button 
+                    className="w-full"
+                    onClick={handleEnroll}
+                  >
+                    Записаться на курс
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {isEnrolled && materials && assignments && (
