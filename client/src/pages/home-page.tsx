@@ -150,6 +150,92 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Offline Course Registration */}
+      <div className="bg-gradient-to-r from-primary/5 to-primary/10 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Персональное обучение в нашем центре
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Получите индивидуальный подход и погрузитесь в обучение вместе с профессиональными преподавателями в комфортной атмосфере
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="bg-white p-8 rounded-2xl shadow-lg">
+              <h3 className="text-2xl font-semibold mb-6">Записаться на офлайн курс</h3>
+              <form className="space-y-4" onSubmit={(e) => {
+                e.preventDefault();
+                // Handle form submission
+              }}>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Ваше имя</label>
+                  <input type="text" className="w-full rounded-lg border border-gray-300 px-4 py-2" placeholder="Иван Иванов" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <input type="email" className="w-full rounded-lg border border-gray-300 px-4 py-2" placeholder="your@email.com" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Телефон</label>
+                  <input type="tel" className="w-full rounded-lg border border-gray-300 px-4 py-2" placeholder="+7 (999) 123-45-67" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Интересующий курс</label>
+                  <select className="w-full rounded-lg border border-gray-300 px-4 py-2">
+                    <option value="">Выберите курс</option>
+                    <option value="programming">Программирование</option>
+                    <option value="business">Бизнес и менеджмент</option>
+                    <option value="science">Наука и инженерия</option>
+                    <option value="humanities">Языки и гуманитарные науки</option>
+                  </select>
+                </div>
+                <button type="submit" className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors">
+                  Отправить заявку
+                </button>
+              </form>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 bg-primary/10 p-3 rounded-lg">
+                  <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-semibold">Персональный подход</h4>
+                  <p className="text-gray-600">Индивидуальные консультации и адаптация программы под ваши цели</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 bg-primary/10 p-3 rounded-lg">
+                  <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-semibold">Современное оборудование</h4>
+                  <p className="text-gray-600">Обучение в оснащенных аудиториях с новейшим оборудованием</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 bg-primary/10 p-3 rounded-lg">
+                  <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-semibold">Гибкий график</h4>
+                  <p className="text-gray-600">Удобное расписание занятий в утреннее или вечернее время</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Courses section */}
       {courses && courses.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
