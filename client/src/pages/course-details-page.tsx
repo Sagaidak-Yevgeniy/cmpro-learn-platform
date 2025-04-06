@@ -200,6 +200,9 @@ export default function CourseDetailsPage() {
                 <TabsTrigger value="tests">Тесты</TabsTrigger>
                 <TabsTrigger value="students">Студенты</TabsTrigger>
                 <TabsTrigger value="info">Информация</TabsTrigger>
+                <TabsTrigger value="tests">Тесты</TabsTrigger>
+                <TabsTrigger value="students">Студенты</TabsTrigger>
+                <TabsTrigger value="info">Информация</TabsTrigger>
               </TabsList>
 
               <TabsContent value="materials">
