@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -25,9 +24,8 @@ import {
   Star,
   ChevronLeft,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
 
 export default function CourseDetailsPage() {
   const { id } = useParams();
@@ -39,45 +37,90 @@ export default function CourseDetailsPage() {
     queryKey: [`/api/courses/${courseId}`],
   });
 
-  if (!course) {
-    return <div>Курс не найден</div>;
-  }
-
-  const isTeacher = user?.id === course.teacherId;
-  const isEnrolled = course.enrollments?.some(e => e.userId === user?.id);
+  const isTeacher = course ? user?.id === course.teacherId : false;
+  const isEnrolled = course ? course.enrollments?.some(e => e.userId === user?.id) : false;
 
   const { data: materials, isLoading: materialsLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}/materials`],
-    enabled: !!isEnrolled,
+    enabled: !!isEnrolled && !!courseId,
   });
 
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}/assignments`],
-    enabled: !!isEnrolled,
+    enabled: !!isEnrolled && !!courseId,
   });
 
   const isLoading = courseLoading || materialsLoading || assignmentsLoading;
 
   if (isLoading) {
-    return <div>Загрузка...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  if (!course) {
+    return (
+      <div className="container py-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold">Курс не найден</h2>
+        </div>
+      </div>
+    );
+  }
+
+  const handleEnroll = async () => {
+    try {
+      const response = await fetch('/api/enrollments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          courseId: courseId
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Успешно!",
+          description: "Вы записались на курс",
+        });
+        window.location.href = '/my-courses';
+      } else {
+        const error = await response.json();
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: error.message || "Не удалось записаться на курс",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка",
+        description: "Не удалось записаться на курс",
+      });
+    }
+  };
 
   return (
     <div className="container py-8">
       <Button
         variant="ghost"
         className="mb-6"
-        onClick={() => window.location.href = `/courses/${courseId}/manage`}
+        onClick={() => window.history.back()}
       >
         <ChevronLeft className="h-4 w-4 mr-2" />
         Назад
       </Button>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {course.image_url && (
+        {course.imageUrl && (
           <div className="md:col-span-3 overflow-hidden rounded-xl h-[300px] relative">
             <img 
-              src={`/uploads/${course.image_url}`}
+              src={`/uploads/${course.imageUrl}`}
               alt={course.title}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -91,12 +134,13 @@ export default function CourseDetailsPage() {
             </div>
           </div>
         )}
+
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2 mb-2">
                 <Badge>{course.category}</Badge>
-                {course.isActive ? (
+                {new Date(course.startDate) <= new Date() && new Date(course.endDate) >= new Date() ? (
                   <Badge variant="success">Активный</Badge>
                 ) : (
                   <Badge variant="secondary">Неактивный</Badge>
@@ -222,40 +266,7 @@ export default function CourseDetailsPage() {
               ) : (
                 <Button 
                   className="w-full"
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/enrollments', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                          courseId: courseId
-                        })
-                      });
-
-                      if (response.ok) {
-                        toast({
-                          title: "Успешно!",
-                          description: "Вы записались на курс",
-                        });
-                        window.location.href = '/my-courses';
-                      } else {
-                        const error = await response.json();
-                        toast({
-                          variant: "destructive",
-                          title: "Ошибка",
-                          description: error.message || "Не удалось записаться на курс",
-                        });
-                      }
-                    } catch (error) {
-                      toast({
-                        variant: "destructive",
-                        title: "Ошибка",
-                        description: "Не удалось записаться на курс",
-                      });
-                    }
-                  }}
+                  onClick={handleEnroll}
                 >
                   Записаться на курс
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -265,14 +276,14 @@ export default function CourseDetailsPage() {
           </Card>
         </div>
 
-        {isEnrolled && (
+        {isEnrolled && materials && assignments && (
           <div className="mt-8 grid gap-6">
             <Card>
               <CardHeader>
                 <CardTitle>Материалы курса</CardTitle>
               </CardHeader>
               <CardContent>
-                {materials?.length > 0 ? (
+                {materials.length > 0 ? (
                   <div className="space-y-4">
                     {materials.map((material) => (
                       <div key={material.id} className="flex items-center justify-between p-4 border rounded-lg">
@@ -297,7 +308,7 @@ export default function CourseDetailsPage() {
                 <CardTitle>Задания</CardTitle>
               </CardHeader>
               <CardContent>
-                {assignments?.length > 0 ? (
+                {assignments.length > 0 ? (
                   <div className="space-y-4">
                     {assignments.map((assignment) => (
                       <div key={assignment.id} className="flex items-center justify-between p-4 border rounded-lg">
