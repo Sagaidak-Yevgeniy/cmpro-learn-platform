@@ -7,6 +7,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -459,7 +467,7 @@ export default function CourseDetailsPage() {
         />
       )}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Подтверждение действия</DialogTitle>
             <DialogDescription>
@@ -468,7 +476,7 @@ export default function CourseDetailsPage() {
                 : "Вы действительно хотите удалить этот курс? Это действие нельзя отменить."}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="sm:justify-end">
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Отмена
             </Button>
