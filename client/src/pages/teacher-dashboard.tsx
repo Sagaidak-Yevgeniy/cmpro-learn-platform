@@ -176,9 +176,9 @@ export default function TeacherDashboard() {
               {stats.courses.map((course) => (
                 <div key={course.id} className="group bg-white overflow-hidden rounded-xl border shadow-sm transition-all hover:shadow-lg">
                   <div className="relative h-48">
-                    {course.image_url ? (
+                    {course.imageUrl ? (
                       <img 
-                        src={`/uploads/${course.image_url}`}
+                        src={`/uploads/${course.imageUrl}`}
                         alt={course.title} 
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                         onError={(e) => {
@@ -190,10 +190,15 @@ export default function TeacherDashboard() {
                         {course.title}
                       </div>
                     )}
-                    <div className="absolute top-3 left-3">
+                    <div className="absolute top-3 left-3 flex gap-2">
                       <span className="px-2 py-1 text-xs font-medium bg-white/90 rounded-full">
-                        {course.studentCount} студентов
+                        {course.studentCount || 0} студентов
                       </span>
+                      {course.category && (
+                        <span className={`px-2 py-1 text-xs font-medium ${getCategoryColor(course.category)} rounded-full`}>
+                          {course.category}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="p-5">
