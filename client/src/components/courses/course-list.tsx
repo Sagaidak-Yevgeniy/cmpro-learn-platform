@@ -14,7 +14,8 @@ export default function CourseList({ courses }: CourseListProps) {
           key={course.id} 
           course={{
             ...course,
-            enrollments: course.enrollments || []
+            enrollments: course.enrollments || [],
+            studentCount: course.studentCount || 0
           }} 
         />
       ))}
