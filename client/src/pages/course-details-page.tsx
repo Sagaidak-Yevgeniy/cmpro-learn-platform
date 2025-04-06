@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useParams, useSearchParams } from "wouter";
+import { useParams, useSearch } from "wouter";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, User, CheckCircle, Loader2, Trash2, UserPlus, UserMinus } from "lucide-react";
@@ -26,8 +26,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CourseDetailsPage() {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const isManageMode = searchParams.get('manage') === 'true';
+  const [searchParams] = useSearch();
+  const isManageMode = new URLSearchParams(searchParams).get('manage') === 'true';
   const courseId = parseInt(id || "0");
   const { user } = useAuth();
   const { toast } = useToast();
