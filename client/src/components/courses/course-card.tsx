@@ -8,9 +8,10 @@ import { format } from "date-fns";
 
 interface CourseCardProps {
   course: Course;
+  isTeacher?: boolean; // Added isTeacher prop
 }
 
-export default function CourseCard({ course }: CourseCardProps) {
+export default function CourseCard({ course, isTeacher }: CourseCardProps) {
   // Map categories to colors
   const categoryColors: Record<string, string> = {
     programming: "bg-blue-100 text-blue-800",
@@ -64,11 +65,21 @@ export default function CourseCard({ course }: CourseCardProps) {
             </div>
             <span className="ml-2 text-xs text-gray-500">Преподаватель: {course.teacher?.name || "Не указан"}</span>
           </div>
-          <Link href={`/courses/${course.id}`}>
-            <Button variant="outline" size="sm" className="text-primary border-primary hover:bg-primary/10">
-              Подробнее
-            </Button>
-          </Link>
+          <div className="flex items-center"> {/*Added div for better spacing*/}
+            <Link href={`/courses/${course.id}`}>
+              <Button variant="outline" size="sm" className="text-primary border-primary hover:bg-primary/10 mr-2"> {/*Added margin right*/}
+                Подробнее
+              </Button>
+            </Link>
+            {isTeacher && (
+              <Button 
+                variant="default"
+                onClick={() => window.location.href = `/courses/${course.id}?manage=true`}  {/*Using window.location.href for direct navigation*/}
+              >
+                Управление курсом
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
