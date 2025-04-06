@@ -53,7 +53,7 @@ export default function CourseDetailsPage() {
       <Button
         variant="ghost"
         className="mb-6"
-        onClick={() => window.history.back()}
+        onClick={() => window.location.href = `/courses/${courseId}/manage`}
       >
         <ChevronLeft className="h-4 w-4 mr-2" />
         Назад
@@ -187,7 +187,7 @@ export default function CourseDetailsPage() {
             <CardContent className="space-y-4">
               {isTeacher ? (
                 <Button className="w-full" asChild>
-                  <a href={`/courses/${courseId}?manage=true`}>
+                  <a href={`/courses/${courseId}/manage`}>
                     Управление курсом
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </a>

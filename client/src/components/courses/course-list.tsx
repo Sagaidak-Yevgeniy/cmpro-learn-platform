@@ -14,7 +14,7 @@ export default function CourseList({ courses }: CourseListProps) {
           key={course.id} 
           course={{
             ...course,
-            imageUrl: course.imageUrl ? `/uploads/${course.imageUrl}` : undefined
+            imageUrl: course.imageUrl || undefined
           }} 
         />
       ))}
