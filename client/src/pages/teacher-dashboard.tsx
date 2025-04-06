@@ -18,17 +18,49 @@ interface TeacherStats {
   courses: any[];  // Using any for simplicity
 }
 
+const getCategoryColor = (category: string): string => {
+  switch (category) {
+    case "Математика":
+      return "bg-blue-500 text-white";
+    case "Физика":
+      return "bg-green-500 text-white";
+    case "Химия":
+      return "bg-yellow-500 text-white";
+    case "Биология":
+      return "bg-purple-500 text-white";
+    default:
+      return "bg-gray-500 text-white";
+  }
+};
+
+const getCategoryLabel = (category: string): string => {
+  // Add more categories as needed
+  switch (category) {
+    case "math":
+      return "Математика";
+    case "physics":
+      return "Физика";
+    case "chemistry":
+      return "Химия";
+    case "biology":
+      return "Биология";
+    default:
+      return category; // Return original category if not found
+  }
+};
+
+
 export default function TeacherDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("courses");
   const { id } = useParams();
   const courseId = id ? parseInt(id) : null;
-  
+
   const { data: stats, isLoading } = useQuery<TeacherStats>({
     queryKey: ["/api/teacher/stats"],
     enabled: !!user && user.role === "teacher",
   });
-  
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[70vh]">
@@ -36,7 +68,7 @@ export default function TeacherDashboard() {
       </div>
     );
   }
-  
+
   if (!stats) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -47,17 +79,15 @@ export default function TeacherDashboard() {
       </div>
     );
   }
-  
-  // Удаляем старую логику управления курсом, так как теперь используется прямая навигация
-  
-  // Стандартная панель управления преподавателя
+
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Кабинет преподавателя, {user?.name}</h1>
         <p className="text-gray-600 mt-1">Управление курсами и учебными материалами</p>
       </div>
-      
+
       {/* Stats cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
         <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -90,7 +120,7 @@ export default function TeacherDashboard() {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center">
@@ -121,7 +151,7 @@ export default function TeacherDashboard() {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center">
@@ -153,7 +183,7 @@ export default function TeacherDashboard() {
           </div>
         </div>
       </div>
-      
+
       {/* Tab content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
@@ -162,7 +192,7 @@ export default function TeacherDashboard() {
           <TabsTrigger value="students">Студенты</TabsTrigger>
           <TabsTrigger value="submissions">Проверка работ</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="courses">
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -196,7 +226,7 @@ export default function TeacherDashboard() {
                       </span>
                       {course.category && (
                         <span className={`px-2 py-1 text-xs font-medium ${getCategoryColor(course.category)} rounded-full`}>
-                          {course.category}
+                          {getCategoryLabel(course.category)}
                         </span>
                       )}
                     </div>
@@ -221,7 +251,7 @@ export default function TeacherDashboard() {
             </div>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="materials">
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6">
@@ -233,7 +263,7 @@ export default function TeacherDashboard() {
             </div>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="students">
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6">
@@ -264,7 +294,7 @@ export default function TeacherDashboard() {
             </div>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="submissions">
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6">
