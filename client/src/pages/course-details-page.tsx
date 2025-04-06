@@ -42,7 +42,7 @@ export default function CourseDetailsPage() {
 
   const { data: materials, isLoading: materialsLoading } = useQuery({
     queryKey: [`/api/courses/${courseId}/materials`],
-    enabled: !!isEnrolled && !!courseId,
+    enabled: !!isEnrolled || !!isTeacher, //This line was changed
   });
 
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({

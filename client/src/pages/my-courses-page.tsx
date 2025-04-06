@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Enrollment, Course, Assignment } from "@shared/schema";
@@ -21,8 +20,8 @@ interface StudentStats {
 
 export default function MyCoursesPage() {
   const { user } = useAuth();
-  
-  const { data: stats, isLoading: statsLoading } = useQuery<StudentStats>({
+
+  const { data: stats, refetch: refetchStats } = useQuery<StudentStats>({
     queryKey: ["api/student/stats"],
     enabled: !!user && user.role === "student",
   });
@@ -34,7 +33,7 @@ export default function MyCoursesPage() {
       </div>
     );
   }
-  
+
   if (!stats) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -48,14 +47,14 @@ export default function MyCoursesPage() {
 
   const activeCourses = stats.courseData.filter(e => e.progress < 100);
   const completedCourses = stats.courseData.filter(e => e.progress === 100);
-  
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Мои курсы</h1>
         <p className="text-gray-600 mt-1">Ваш прогресс обучения</p>
       </div>
-      
+
       <div className="grid gap-6 mb-8">
         {/* Активные курсы */}
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -63,7 +62,7 @@ export default function MyCoursesPage() {
             <h2 className="text-lg font-medium text-gray-900">Активные курсы</h2>
             <p className="mt-1 text-sm text-gray-500">Курсы в процессе изучения</p>
           </div>
-          
+
           <div className="border-t border-gray-200">
             {activeCourses.length > 0 ? (
               <div className="divide-y divide-gray-200">
