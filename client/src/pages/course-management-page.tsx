@@ -692,11 +692,95 @@ export default function CourseManagementPage() {
             <CardHeader>
               <CardTitle>Настройки курса</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full" onClick={() => updateCourseMutation.mutate(course)}>
-                <Settings className="h-4 w-4 mr-2" />
-                Редактировать курс
-              </Button>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Название курса</label>
+                  <Input 
+                    value={course.title} 
+                    onChange={(e) => {
+                      const updatedCourse = { ...course, title: e.target.value };
+                      updateCourseMutation.mutate(updatedCourse);
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Описание</label>
+                  <Textarea 
+                    value={course.description}
+                    onChange={(e) => {
+                      const updatedCourse = { ...course, description: e.target.value };
+                      updateCourseMutation.mutate(updatedCourse);
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Изображение курса</label>
+                  <div className="mt-2">
+                    {course.imageUrl ? (
+                      <div className="relative">
+                        <img 
+                          src={course.imageUrl.startsWith('http') ? course.imageUrl : `/uploads/${course.imageUrl}`}
+                          alt={course.title}
+                          className="w-full h-40 object-cover rounded-md"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://placehold.co/600x400/png?text=Курс';
+                          }}
+                        />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            const updatedCourse = { ...course, imageUrl: null };
+                            updateCourseMutation.mutate(updatedCourse);
+                          }}
+                        >
+                          Удалить
+                        </Button>
+                      </div>
+                    ) : null}
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="mt-2"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        const formData = new FormData();
+                        formData.append("image", file);
+
+                        try {
+                          const response = await fetch(`/api/courses/${course.id}/image`, {
+                            method: "PUT",
+                            body: formData,
+                          });
+
+                          if (!response.ok) {
+                            throw new Error("Ошибка при загрузке изображения");
+                          }
+
+                          const result = await response.json();
+                          queryClient.invalidateQueries([`/api/courses/${course.id}`]);
+                          toast({
+                            title: "Успешно",
+                            description: "Изображение курса обновлено",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Ошибка",
+                            description: "Не удалось загрузить изображение",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

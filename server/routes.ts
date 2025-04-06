@@ -8,7 +8,7 @@ import path from "path";
 import fs from "fs";
 
 // Настройка multer для загрузки файлов
-const storage = multer.diskStorage({
+const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = 'public/uploads';
     if (!fs.existsSync(uploadDir)){
@@ -23,7 +23,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ 
-  storage,
+  storage: multerStorage,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
   },
@@ -50,6 +50,45 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   // setup authentication routes
   setupAuth(app);
+
+  // Upload image route
+  app.post("/api/upload", upload.single("image"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "Файл не загружен" });
+      }
+      res.json({ 
+        imageUrl: req.file.filename,
+        message: "Файл успешно загружен" 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка при загрузке файла" });
+    }
+  });
+
+  // Update course image
+  app.put("/api/courses/:id/image", upload.single("image"), async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      if (!req.file) {
+        return res.status(400).json({ message: "Файл не загружен" });
+      }
+
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Курс не найден" });
+      }
+
+      const updatedCourse = await storage.updateCourse(courseId, {
+        ...course,
+        imageUrl: req.file.filename
+      });
+
+      res.json(updatedCourse);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка при обновлении изображения" });
+    }
+  });
 
   // Courses API
   app.get("/api/courses", async (req, res) => {

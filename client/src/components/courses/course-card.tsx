@@ -29,11 +29,11 @@ export default function CourseCard({ course, isTeacher }: CourseCardProps) {
       <div className="relative h-48">
         {course.imageUrl ? (
           <img 
-            src={`/uploads/${course.imageUrl}`}
+            src={course.imageUrl.startsWith('http') ? course.imageUrl : `/uploads/${course.imageUrl}`}
             alt={course.title} 
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
             onError={(e) => {
-              e.currentTarget.src = '/placeholder-course.jpg';
+              e.currentTarget.src = 'https://placehold.co/600x400/png?text=Курс';
             }}
           />
         ) : (
