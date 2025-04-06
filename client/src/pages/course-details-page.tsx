@@ -262,7 +262,10 @@ export default function CourseDetailsPage() {
                       <p className="text-sm text-gray-500 mt-1">45% выполнено</p>
                     </div>
                     <div className="space-y-2 mt-4">
-                      <Button className="w-full">
+                      <Button 
+                        className="w-full"
+                        onClick={() => window.location.href = `/courses/${courseId}/materials`}
+                      >
                         Продолжить обучение
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
