@@ -203,6 +203,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Вы уже записаны на этот курс" });
       }
 
+      // Проверяем текущее количество студентов
+      const currentEnrollments = await storage.getEnrollmentsByCourse(enrollmentData.courseId);
+      const studentCount = currentEnrollments.length;
+
       const enrollment = await storage.createEnrollment({
         ...enrollmentData,
         progress: enrollmentData.progress || 0,
@@ -213,10 +217,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Обновляем количество студентов в курсе
       const updatedCourse = await storage.updateCourse(enrollmentData.courseId, {
         ...course,
-        studentCount: (course.studentCount || 0) + 1
+        studentCount: studentCount + 1
       });
 
-      res.status(201).json(enrollment);
+      res.status(201).json({
+        ...enrollment,
+        course: updatedCourse
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Неверные данные записи", errors: error.errors });

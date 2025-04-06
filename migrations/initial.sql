@@ -23,17 +23,45 @@ CREATE TABLE IF NOT EXISTS courses (
   student_count INTEGER NOT NULL DEFAULT 0
 );
 
--- Add student_count column if it doesn't exist
-DO $$ 
-BEGIN 
-  IF NOT EXISTS (
-    SELECT 1 
-    FROM information_schema.columns 
-    WHERE table_name='courses' AND column_name='student_count'
-  ) THEN
-    ALTER TABLE courses ADD COLUMN student_count INTEGER NOT NULL DEFAULT 0;
+-- Update student_count for all courses
+CREATE OR REPLACE FUNCTION update_course_student_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE courses 
+    SET student_count = (
+      SELECT COUNT(*) 
+      FROM enrollments 
+      WHERE course_id = NEW.course_id
+    )
+    WHERE id = NEW.course_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE courses 
+    SET student_count = (
+      SELECT COUNT(*) 
+      FROM enrollments 
+      WHERE course_id = OLD.course_id
+    )
+    WHERE id = OLD.course_id;
   END IF;
-END $$;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger for enrollment changes
+DROP TRIGGER IF EXISTS enrollment_count_trigger ON enrollments;
+CREATE TRIGGER enrollment_count_trigger
+AFTER INSERT OR DELETE ON enrollments
+FOR EACH ROW
+EXECUTE FUNCTION update_course_student_count();
+
+-- Initial update of all course student counts
+UPDATE courses c
+SET student_count = (
+  SELECT COUNT(*) 
+  FROM enrollments e 
+  WHERE e.course_id = c.id
+);
 
 -- Создание таблицы записей на курсы
 CREATE TABLE IF NOT EXISTS enrollments (
