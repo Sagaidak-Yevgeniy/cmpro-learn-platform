@@ -26,9 +26,12 @@ export default function CourseCard({ course }: CourseCardProps) {
       <div className="h-40 bg-gray-200">
         {course.imageUrl ? (
           <img 
-            src={course.imageUrl || undefined} 
+            src={`/uploads/${course.imageUrl}`}
             alt={course.title} 
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder-course.jpg';
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-primary to-blue-700 text-white text-xl font-bold p-4 text-center">

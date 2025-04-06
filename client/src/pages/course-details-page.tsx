@@ -125,9 +125,12 @@ export default function CourseDetailsPage() {
         <div className="relative h-64 bg-gray-200">
           {course.imageUrl ? (
             <img
-              src={course.imageUrl}
+              src={`/uploads/${course.imageUrl}`}
               alt={course.title}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder-course.jpg';
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-primary to-blue-700 text-white text-2xl font-bold">
@@ -159,7 +162,7 @@ export default function CourseDetailsPage() {
                 </div>
                 <div className="flex items-center">
                   <User className="mr-1.5 h-5 w-5 text-gray-400" />
-                  <span>Преподаватель ID: {course.teacherId}</span>
+                  <span>Преподаватель: {course.teacher?.name || 'Не указан'}</span>
                 </div>
               </div>
             </div>
@@ -185,9 +188,11 @@ export default function CourseDetailsPage() {
             )}
 
             {isCourseOwner && (
-              <Button variant="outline" onClick={() => setLocation(`/teacher/courses/${courseId}`)}>
-                Управление курсом
-              </Button>
+              <Link href={`/teacher/courses/${courseId}`}>
+                <Button variant="outline">
+                  Управление курсом
+                </Button>
+              </Link>
             )}
           </div>
         </div>

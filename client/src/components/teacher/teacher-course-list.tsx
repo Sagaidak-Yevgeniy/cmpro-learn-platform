@@ -15,7 +15,7 @@ const CourseCard = ({ course }: { course: Course }) => (
     <p>Start Date: {format(new Date(course.startDate), 'dd.MM.yyyy')}</p>
     <p>End Date: {format(new Date(course.endDate), 'dd.MM.yyyy')}</p>
     <p>Students: {course.studentCount}</p>
-    <Link href={`/courses/${course.id}`}>
+    <Link href={`/teacher/courses/${course.id}`}>
       <Button variant="link">Управление курсом</Button>
     </Link>
   </div>
