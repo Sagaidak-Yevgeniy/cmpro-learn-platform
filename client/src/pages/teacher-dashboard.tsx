@@ -204,7 +204,7 @@ export default function TeacherDashboard() {
                         Старт: {format(new Date(course.startDate), 'dd.MM.yyyy')}
                       </span>
                       <Button 
-                        onClick={() => window.location.href = `/teacher/courses/${course.id}`}
+                        onClick={() => window.location.href = `/courses/${course.id}/manage`}
                         className="bg-primary text-white hover:bg-primary/90"
                       >
                         Управление
