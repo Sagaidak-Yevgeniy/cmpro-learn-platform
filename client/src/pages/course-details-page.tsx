@@ -40,7 +40,9 @@ export default function CourseDetailsPage() {
 
   const enrollMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/courses/${courseId}/enroll`);
+      const response = await apiRequest("POST", `/api/enrollments`, {
+        courseId: courseId
+      });
       if (!response.ok) throw new Error("Ошибка при записи на курс");
       return response.json();
     },
@@ -50,6 +52,8 @@ export default function CourseDetailsPage() {
         description: "Вы записались на курс",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/courses/${courseId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/student/stats`] });
+      window.location.href = '/my-courses';
     },
   });
 
@@ -197,9 +201,6 @@ export default function CourseDetailsPage() {
               <TabsList>
                 <TabsTrigger value="materials">Материалы</TabsTrigger>
                 <TabsTrigger value="assignments">Задания</TabsTrigger>
-                <TabsTrigger value="tests">Тесты</TabsTrigger>
-                <TabsTrigger value="students">Студенты</TabsTrigger>
-                <TabsTrigger value="info">Информация</TabsTrigger>
                 <TabsTrigger value="tests">Тесты</TabsTrigger>
                 <TabsTrigger value="students">Студенты</TabsTrigger>
                 <TabsTrigger value="info">Информация</TabsTrigger>
